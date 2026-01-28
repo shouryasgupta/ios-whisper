@@ -1,0 +1,174 @@
+import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { Task, User, AppState, generateMockTask } from "@/types/task";
+
+interface AppContextType extends AppState {
+  addTask: (text: string) => void;
+  completeTask: (id: string) => void;
+  deleteTask: (id: string) => void;
+  snoozeTask: (id: string, duration: "15min" | "1hr" | "tomorrow") => void;
+  signIn: (provider: "apple" | "google") => void;
+  signOut: () => void;
+  dismissSignInPrompt: () => void;
+  deleteAllRecordings: () => void;
+  deleteAccount: () => void;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Initial mock tasks for demo
+const initialTasks: Task[] = [
+  {
+    id: "1",
+    summary: "Pick up dry cleaning after work",
+    fullText: "Pick up dry cleaning after work - the blue suit and two shirts",
+    kind: "action",
+    reminder: { type: "specific", date: new Date(Date.now() + 2 * 60 * 60 * 1000) },
+    hasAudio: true,
+    hasChecklist: false,
+    isBuyIntent: false,
+    createdAt: new Date(Date.now() - 30 * 60 * 1000),
+    isCompleted: false,
+  },
+  {
+    id: "2",
+    summary: "Order birthday cake for Emma",
+    fullText: "Order birthday cake for Emma's party on Saturday - chocolate with vanilla frosting",
+    kind: "action",
+    reminder: { type: "specific", date: new Date(Date.now() + 24 * 60 * 60 * 1000) },
+    hasAudio: true,
+    hasChecklist: false,
+    isBuyIntent: true,
+    buyLink: "https://www.amazon.com/s?k=birthday+cake",
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    isCompleted: false,
+  },
+  {
+    id: "3",
+    summary: "Dentist appointment reminder",
+    fullText: "Dentist appointment next Tuesday at 3pm - remember to bring insurance card",
+    kind: "note",
+    reminder: { type: "specific", date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) },
+    hasAudio: true,
+    hasChecklist: false,
+    isBuyIntent: false,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    isCompleted: false,
+  },
+];
+
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [user, setUser] = useState<User | null>(null);
+  const [captureCount, setCaptureCount] = useState(0);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+
+  const addTask = useCallback((text: string) => {
+    const newTask = generateMockTask(text);
+    setTasks(prev => [newTask, ...prev]);
+    
+    const newCount = captureCount + 1;
+    setCaptureCount(newCount);
+    
+    // Show sign-in prompt after 2 captures if not signed in
+    if (newCount === 2 && !user) {
+      setTimeout(() => setShowSignInPrompt(true), 1500);
+    }
+  }, [captureCount, user]);
+
+  const completeTask = useCallback((id: string) => {
+    setTasks(prev => prev.map(task => 
+      task.id === id 
+        ? { ...task, isCompleted: true, completedAt: new Date() }
+        : task
+    ));
+  }, []);
+
+  const deleteTask = useCallback((id: string) => {
+    setTasks(prev => prev.filter(task => task.id !== id));
+  }, []);
+
+  const snoozeTask = useCallback((id: string, duration: "15min" | "1hr" | "tomorrow") => {
+    setTasks(prev => prev.map(task => {
+      if (task.id !== id) return task;
+      
+      const now = new Date();
+      let newDate: Date;
+      
+      switch (duration) {
+        case "15min":
+          newDate = new Date(now.getTime() + 15 * 60 * 1000);
+          break;
+        case "1hr":
+          newDate = new Date(now.getTime() + 60 * 60 * 1000);
+          break;
+        case "tomorrow":
+          newDate = new Date(now);
+          newDate.setDate(newDate.getDate() + 1);
+          newDate.setHours(9, 0, 0, 0);
+          break;
+      }
+      
+      return { ...task, reminder: { type: "specific", date: newDate } };
+    }));
+  }, []);
+
+  const signIn = useCallback((provider: "apple" | "google") => {
+    // Simulated sign-in
+    setUser({
+      id: "user-1",
+      name: provider === "apple" ? "Jane Doe" : "Jane Doe",
+      email: provider === "apple" ? "jane@icloud.com" : "jane@gmail.com",
+      isSignedIn: true,
+      watchCaptureEnabled: true,
+    });
+    setShowSignInPrompt(false);
+  }, []);
+
+  const signOut = useCallback(() => {
+    setUser(null);
+  }, []);
+
+  const dismissSignInPrompt = useCallback(() => {
+    setShowSignInPrompt(false);
+  }, []);
+
+  const deleteAllRecordings = useCallback(() => {
+    setTasks(prev => prev.map(task => ({ ...task, hasAudio: false })));
+  }, []);
+
+  const deleteAccount = useCallback(() => {
+    setTasks([]);
+    setUser(null);
+    setCaptureCount(0);
+  }, []);
+
+  return (
+    <AppContext.Provider
+      value={{
+        tasks,
+        user,
+        captureCount,
+        showSignInPrompt,
+        addTask,
+        completeTask,
+        deleteTask,
+        snoozeTask,
+        signIn,
+        signOut,
+        dismissSignInPrompt,
+        deleteAllRecordings,
+        deleteAccount,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error("useApp must be used within an AppProvider");
+  }
+  return context;
+};
