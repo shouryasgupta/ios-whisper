@@ -65,10 +65,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen pb-32">
-      {/* Header */}
+    <div className="min-h-screen pb-24">
+      {/* Fixed Header with Mic Button */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg safe-area-top">
-        <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center justify-between px-5 py-3">
           <div>
             <h1 className="text-2xl font-bold">Handled</h1>
             {user && (
@@ -78,21 +78,27 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
             )}
           </div>
-          {user && (
-            <div className="flex items-center gap-3">
-              {user.watchCaptureEnabled && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-                  <Watch size={12} />
-                  <span>Watch</span>
+          
+          {/* Primary CTA - Mic Button */}
+          <div className="flex items-center gap-3">
+            <MicButton onClick={onOpenCapture} />
+            
+            {user && (
+              <>
+                {user.watchCaptureEnabled && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
+                    <Watch size={12} />
+                    <span>Watch</span>
+                  </div>
+                )}
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-medium text-primary">
+                    {user.name.charAt(0)}
+                  </span>
                 </div>
-              )}
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-medium text-primary">
-                  {user.name.charAt(0)}
-                </span>
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -159,10 +165,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         )}
       </main>
 
-      {/* Floating mic button */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40">
-        <MicButton onClick={onOpenCapture} size="large" />
-      </div>
 
       {/* Voice capture sheet */}
       <VoiceCaptureSheet
