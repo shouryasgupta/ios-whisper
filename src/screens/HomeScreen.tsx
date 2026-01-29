@@ -66,39 +66,43 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Fixed Header with Mic Button */}
+      {/* Fixed Header with Centered Mic Button */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg safe-area-top">
+        {/* Top bar with logo and user */}
         <div className="flex items-center justify-between px-5 py-3">
           <div>
-            <h1 className="text-2xl font-bold">Handled</h1>
+            <h1 className="text-xl font-bold">Handled</h1>
             {user && (
-              <div className="flex items-center gap-2 mt-1">
-                <Cloud size={12} className="text-success" />
+              <div className="flex items-center gap-2 mt-0.5">
+                <Cloud size={10} className="text-success" />
                 <span className="text-xs text-success">Synced</span>
               </div>
             )}
           </div>
           
-          {/* Primary CTA - Mic Button */}
-          <div className="flex items-center gap-3">
-            <MicButton onClick={onOpenCapture} />
-            
-            {user && (
-              <>
-                {user.watchCaptureEnabled && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-                    <Watch size={12} />
-                    <span>Watch</span>
-                  </div>
-                )}
-                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-medium text-primary">
-                    {user.name.charAt(0)}
-                  </span>
+          {user && (
+            <div className="flex items-center gap-3">
+              {user.watchCaptureEnabled && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
+                  <Watch size={12} />
+                  <span>Watch</span>
                 </div>
-              </>
-            )}
-          </div>
+              )}
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-medium text-primary">
+                  {user.name.charAt(0)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Centered Mic CTA */}
+        <div className="flex flex-col items-center pb-5">
+          <MicButton onClick={onOpenCapture} size="large" />
+          <p className="text-sm text-muted-foreground mt-3">
+            Speak in your preferred language
+          </p>
         </div>
       </header>
 
