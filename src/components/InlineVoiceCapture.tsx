@@ -3,7 +3,7 @@ import { X, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MicButton } from "@/components/MicButton";
 import { sampleTranscriptions } from "@/types/task";
-import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface InlineVoiceCaptureProps {
   onCapture: (text: string) => void;
@@ -21,8 +21,6 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [capturedText, setCapturedText] = useState("");
 
   // Timer countdown
   useEffect(() => {
@@ -44,32 +42,27 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   const handleStartRecording = () => {
     setIsRecording(true);
     setTimeLeft(60);
-    setShowConfirmation(false);
-    setCapturedText("");
   };
 
   const handleStopRecording = useCallback(() => {
     setIsRecording(false);
+    setTimeLeft(60);
     
     // Simulate transcription with random sample
     const randomText = sampleTranscriptions[Math.floor(Math.random() * sampleTranscriptions.length)];
-    setCapturedText(randomText);
     
-    // Show confirmation after brief delay
-    setTimeout(() => {
-      setShowConfirmation(true);
-      onCapture(randomText);
-    }, 500);
+    // Capture the task
+    onCapture(randomText);
+    
+    // Show toast notification
+    toast({
+      title: "Got it!",
+      description: "You don't need to remember this anymore.",
+    });
   }, [onCapture]);
 
   const handleCancel = () => {
     setIsRecording(false);
-    setShowConfirmation(false);
-    setTimeLeft(60);
-  };
-
-  const handleDone = () => {
-    setShowConfirmation(false);
     setTimeLeft(60);
   };
 
@@ -80,52 +73,13 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   };
 
   // Idle state - show mic button
-  if (!isRecording && !showConfirmation) {
+  if (!isRecording) {
     return (
       <div className="flex flex-col items-center py-4">
         <MicButton onClick={handleStartRecording} size="large" />
         <p className="text-sm text-muted-foreground mt-3">
           Speak in your preferred language
         </p>
-      </div>
-    );
-  }
-
-  // Confirmation state
-  if (showConfirmation) {
-    return (
-      <div className="flex flex-col items-center py-4 px-4 animate-fade-in">
-        {/* Checkmark */}
-        <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mb-3">
-          <svg
-            className="w-10 h-10 text-success"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path
-              d="M5 13l4 4L19 7"
-              strokeDasharray="100"
-              className="animate-checkmark"
-            />
-          </svg>
-        </div>
-        
-        <h2 className="text-lg font-semibold mb-1">Got it!</h2>
-        <p className="text-sm text-muted-foreground mb-3">
-          You don't need to remember this anymore.
-        </p>
-        
-        <div className="w-full max-w-sm p-3 bg-secondary rounded-xl mb-4">
-          <p className="text-sm text-secondary-foreground text-center">{capturedText}</p>
-        </div>
-        
-        <Button onClick={handleDone} className="rounded-xl px-8">
-          Done
-        </Button>
       </div>
     );
   }
