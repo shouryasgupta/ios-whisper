@@ -7,7 +7,6 @@ import { OnboardingScreen } from "@/screens/OnboardingScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { WatchScreen } from "@/screens/WatchScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
-import { VoiceCaptureSheet } from "@/components/VoiceCaptureSheet";
 import { Task } from "@/types/task";
 
 const AppContent: React.FC = () => {
@@ -23,7 +22,6 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<TabType>("home");
-  const [isCaptureOpen, setIsCaptureOpen] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [reminderTask, setReminderTask] = useState<Task | null>(null);
 
@@ -63,10 +61,6 @@ const AppContent: React.FC = () => {
     }
   }, [tasks, reminderTask]);
 
-  const handleCapture = (text: string) => {
-    addTask(text);
-  };
-
   const handleSignIn = (provider: "apple" | "google") => {
     signIn(provider);
     setShowSignInModal(false);
@@ -88,16 +82,7 @@ const AppContent: React.FC = () => {
 
   // First launch onboarding
   if (isFirstLaunch) {
-    return (
-      <>
-        <OnboardingScreen onStartCapture={() => setIsCaptureOpen(true)} />
-        <VoiceCaptureSheet
-          isOpen={isCaptureOpen}
-          onClose={() => setIsCaptureOpen(false)}
-          onCapture={handleCapture}
-        />
-      </>
-    );
+    return <OnboardingScreen onStartCapture={() => addTask("First capture")} />;
   }
 
   return (
@@ -114,13 +99,7 @@ const AppContent: React.FC = () => {
       )}
 
       {/* Main content */}
-      {activeTab === "home" && (
-        <HomeScreen
-          onOpenCapture={() => setIsCaptureOpen(true)}
-          isCaptureOpen={isCaptureOpen}
-          onCloseCapture={() => setIsCaptureOpen(false)}
-        />
-      )}
+      {activeTab === "home" && <HomeScreen />}
       {activeTab === "watch" && (
         <WatchScreen onSignIn={() => setShowSignInModal(true)} />
       )}

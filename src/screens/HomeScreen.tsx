@@ -1,25 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { useApp } from "@/context/AppContext";
-import { MicButton } from "@/components/MicButton";
+import { InlineVoiceCapture } from "@/components/InlineVoiceCapture";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskDetailSheet } from "@/components/TaskDetailSheet";
-import { VoiceCaptureSheet } from "@/components/VoiceCaptureSheet";
 import { EmptyState } from "@/components/EmptyState";
 import { Task } from "@/types/task";
 import { isToday, isFuture, addDays, isBefore } from "date-fns";
 import { Cloud, Watch } from "lucide-react";
 
-interface HomeScreenProps {
-  onOpenCapture: () => void;
-  isCaptureOpen: boolean;
-  onCloseCapture: () => void;
-}
+interface HomeScreenProps {}
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({
-  onOpenCapture,
-  isCaptureOpen,
-  onCloseCapture,
-}) => {
+export const HomeScreen: React.FC<HomeScreenProps> = () => {
   const { tasks, user, addTask, completeTask, deleteTask, snoozeTask } = useApp();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
@@ -60,9 +51,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const hasNoTasks = todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
   const allDone = hasNoTasks && completedCount > 0;
 
-  const handleCapture = (text: string) => {
-    addTask(text);
-  };
 
   return (
     <div className="min-h-screen pb-24">
@@ -97,13 +85,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
         </div>
         
-        {/* Centered Mic CTA */}
-        <div className="flex flex-col items-center pb-5">
-          <MicButton onClick={onOpenCapture} size="large" />
-          <p className="text-sm text-muted-foreground mt-3">
-            Speak in your preferred language
-          </p>
-        </div>
+        {/* Inline Voice Capture */}
+        <InlineVoiceCapture onCapture={addTask} />
       </header>
 
       {/* Content */}
@@ -169,13 +152,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         )}
       </main>
 
-
-      {/* Voice capture sheet */}
-      <VoiceCaptureSheet
-        isOpen={isCaptureOpen}
-        onClose={onCloseCapture}
-        onCapture={handleCapture}
-      />
 
       {/* Task detail sheet */}
       <TaskDetailSheet
