@@ -1,19 +1,35 @@
-import React from "react";
-import { Volume2, CheckSquare, ExternalLink, Clock, Calendar } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Play, Pause, CalendarIcon, Trash2, Check, Circle, Volume2 } from "lucide-react";
 import { Task } from "@/types/task";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { format, isToday, isTomorrow, formatDistanceToNow } from "date-fns";
+import { format, isToday, isTomorrow, addDays } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TaskCardProps {
   task: Task;
-  onClick: () => void;
+  onComplete: (id: string) => void;
+  onDelete: (id: string) => void;
+  onUpdateReminder: (id: string, date: Date) => void;
+  onDeleteRecording: (id: string) => void;
 }
 
 const formatReminder = (reminder: Task["reminder"]): string => {
   if (reminder.type === "anytime") return "Anytime";
   if (reminder.type === "none") return "";
-  
+
   const date = reminder.date;
   if (isToday(date)) {
     return `Today, ${format(date, "h:mm a")}`;
@@ -24,80 +40,226 @@ const formatReminder = (reminder: Task["reminder"]): string => {
   return format(date, "EEE, MMM d");
 };
 
-const getKindColor = (kind: Task["kind"]) => {
-  switch (kind) {
-    case "action":
-      return "bg-primary/10 text-primary border-primary/20";
-    case "note":
-      return "bg-accent/10 text-accent border-accent/20";
-    case "draft":
-      return "bg-muted text-muted-foreground border-muted";
-    default:
-      return "bg-secondary text-secondary-foreground";
-  }
-};
-
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  onComplete,
+  onDelete,
+  onUpdateReminder,
+  onDeleteRecording,
+}) => {
   const reminderText = formatReminder(task.reminder);
-  const isUpcoming = task.reminder.type === "specific" && 
-    new Date(task.reminder.date).getTime() - Date.now() < 2 * 60 * 60 * 1000;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playProgress, setPlayProgress] = useState(0);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // Simulated 5-second audio playback
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setPlayProgress((prev) => {
+        if (prev >= 100) {
+          setIsPlaying(false);
+          return 0;
+        }
+        return prev + 2; // 100% in ~5 seconds (50 ticks * 100ms)
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  const togglePlay = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPlaying) {
+      setIsPlaying(false);
+      setPlayProgress(0);
+    } else {
+      setIsPlaying(true);
+      setPlayProgress(0);
+    }
+  }, [isPlaying]);
+
+  const handleDateSelect = useCallback(
+    (date: Date | undefined) => {
+      if (date) {
+        onUpdateReminder(task.id, date);
+        setCalendarOpen(false);
+      }
+    },
+    [task.id, onUpdateReminder]
+  );
+
+  const handleQuickReminder = useCallback(
+    (option: "tomorrow" | "next-week" | "clear") => {
+      const now = new Date();
+      if (option === "tomorrow") {
+        const d = addDays(now, 1);
+        d.setHours(9, 0, 0, 0);
+        onUpdateReminder(task.id, d);
+      } else if (option === "next-week") {
+        const d = addDays(now, 7);
+        d.setHours(9, 0, 0, 0);
+        onUpdateReminder(task.id, d);
+      }
+      setCalendarOpen(false);
+    },
+    [task.id, onUpdateReminder]
+  );
 
   return (
-    <button
-      onClick={onClick}
+    <div
       className={cn(
         "w-full text-left p-4 bg-card rounded-2xl border shadow-sm",
-        "transition-all duration-200 press-effect",
-        "hover:shadow-md hover:border-primary/20",
-        task.isCompleted && "opacity-60"
+        "transition-all duration-200",
+        task.isCompleted && "opacity-50"
       )}
     >
-      <div className="flex items-start justify-between gap-3">
+      {/* Top row: completion circle + summary */}
+      <div className="flex items-start gap-3">
+        <button
+          onClick={() => onComplete(task.id)}
+          className="mt-0.5 shrink-0 transition-colors duration-200"
+          aria-label="Mark complete"
+        >
+          {task.isCompleted ? (
+            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+              <Check size={12} className="text-primary-foreground" />
+            </div>
+          ) : (
+            <Circle size={20} className="text-muted-foreground hover:text-primary transition-colors" />
+          )}
+        </button>
+
         <div className="flex-1 min-w-0">
-          {/* Summary */}
-          <p className={cn(
-            "font-medium text-card-foreground mb-2 leading-snug",
-            task.isCompleted && "line-through"
-          )}>
+          <p
+            className={cn(
+              "font-medium text-card-foreground leading-snug",
+              task.isCompleted && "line-through"
+            )}
+          >
             {task.summary}
           </p>
-          
-          {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Reminder time */}
-            {reminderText && (
-              <span className={cn(
-                "inline-flex items-center gap-1 text-xs",
-                isUpcoming ? "text-primary font-medium" : "text-muted-foreground"
-              )}>
-                {isUpcoming ? <Clock size={12} /> : <Calendar size={12} />}
-                {reminderText}
-              </span>
-            )}
-            
-            {/* Kind badge */}
-            <Badge 
-              variant="outline" 
-              className={cn("text-xs capitalize", getKindColor(task.kind))}
-            >
-              {task.kind}
-            </Badge>
-          </div>
-        </div>
-        
-        {/* Icons */}
-        <div className="flex flex-col items-end gap-2">
-          {task.hasAudio && (
-            <Volume2 size={16} className="text-muted-foreground" />
-          )}
-          {task.hasChecklist && (
-            <CheckSquare size={16} className="text-muted-foreground" />
-          )}
-          {task.isBuyIntent && (
-            <ExternalLink size={16} className="text-accent" />
+          {reminderText && (
+            <span className="text-xs text-muted-foreground mt-1 block">
+              {reminderText}
+            </span>
           )}
         </div>
       </div>
-    </button>
+
+      {/* Audio progress bar */}
+      {isPlaying && (
+        <div className="mt-3 px-8">
+          <Progress value={playProgress} className="h-1" />
+        </div>
+      )}
+
+      {/* Action row */}
+      {!task.isCompleted && (
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
+          <div className="flex items-center gap-1">
+            {/* Play/Pause */}
+            {task.hasAudio && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                onClick={togglePlay}
+                aria-label={isPlaying ? "Pause recording" : "Play recording"}
+              >
+                {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+              </Button>
+            )}
+
+            {/* Calendar popover */}
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  aria-label="Set reminder"
+                >
+                  <CalendarIcon size={16} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start" side="top">
+                <div className="flex gap-1 p-2 border-b border-border">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => handleQuickReminder("tomorrow")}
+                  >
+                    Tomorrow
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => handleQuickReminder("next-week")}
+                  >
+                    Next Week
+                  </Button>
+                </div>
+                <Calendar
+                  mode="single"
+                  selected={
+                    task.reminder.type === "specific"
+                      ? task.reminder.date
+                      : undefined
+                  }
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Delete dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  aria-label="Delete options"
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top">
+                {task.hasAudio && (
+                  <DropdownMenuItem
+                    onClick={() => onDeleteRecording(task.id)}
+                    className="text-sm"
+                  >
+                    <Volume2 size={14} className="mr-2" />
+                    Delete Recording
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={() => onDelete(task.id)}
+                  className="text-sm text-destructive focus:text-destructive"
+                >
+                  <Trash2 size={14} className="mr-2" />
+                  Delete Task
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Done button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs text-muted-foreground hover:text-primary"
+            onClick={() => onComplete(task.id)}
+          >
+            <Check size={14} className="mr-1" />
+            Done
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };

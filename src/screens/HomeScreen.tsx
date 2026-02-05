@@ -1,35 +1,28 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useApp } from "@/context/AppContext";
 import { InlineVoiceCapture } from "@/components/InlineVoiceCapture";
 import { TaskCard } from "@/components/TaskCard";
-import { TaskDetailSheet } from "@/components/TaskDetailSheet";
 import { EmptyState } from "@/components/EmptyState";
-import { Task } from "@/types/task";
 import { isToday, isFuture, addDays, isBefore } from "date-fns";
 import { Cloud, Watch } from "lucide-react";
 
-interface HomeScreenProps {}
-
-export const HomeScreen: React.FC<HomeScreenProps> = () => {
-  const { tasks, user, addTask, completeTask, deleteTask, snoozeTask } = useApp();
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+export const HomeScreen: React.FC = () => {
+  const { tasks, user, addTask, completeTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
 
   // Categorize tasks
   const { todayTasks, upcomingTasks, savedTasks, completedCount } = useMemo(() => {
     const now = new Date();
     const in7Days = addDays(now, 7);
-    
+
     const incomplete = tasks.filter(t => !t.isCompleted);
     const completed = tasks.filter(t => t.isCompleted);
-    
+
     const today = incomplete.filter(t => {
       if (t.reminder.type === "anytime") return true;
-      if (t.reminder.type === "specific") {
-        return isToday(t.reminder.date);
-      }
+      if (t.reminder.type === "specific") return isToday(t.reminder.date);
       return false;
     });
-    
+
     const upcoming = incomplete.filter(t => {
       if (t.reminder.type === "specific") {
         const date = t.reminder.date;
@@ -37,9 +30,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = () => {
       }
       return false;
     });
-    
+
     const saved = incomplete.filter(t => t.kind === "note" || t.kind === "draft");
-    
+
     return {
       todayTasks: today,
       upcomingTasks: upcoming,
@@ -51,12 +44,30 @@ export const HomeScreen: React.FC<HomeScreenProps> = () => {
   const hasNoTasks = todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
   const allDone = hasNoTasks && completedCount > 0;
 
+  const renderSection = (title: string, sectionTasks: typeof todayTasks) => (
+    <section>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+        {title}
+      </h2>
+      <div className="space-y-3">
+        {sectionTasks.map(task => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            onComplete={completeTask}
+            onDelete={deleteTask}
+            onUpdateReminder={updateTaskReminder}
+            onDeleteRecording={deleteRecording}
+          />
+        ))}
+      </div>
+    </section>
+  );
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Fixed Header with Centered Mic Button */}
+      {/* Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg safe-area-top">
-        {/* Top bar with logo and user */}
         <div className="flex items-center justify-between px-5 py-3">
           <div>
             <h1 className="text-xl font-bold">Handled</h1>
@@ -67,7 +78,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = () => {
               </div>
             )}
           </div>
-          
           {user && (
             <div className="flex items-center gap-3">
               {user.watchCaptureEnabled && (
@@ -77,15 +87,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = () => {
                 </div>
               )}
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-medium text-primary">
-                  {user.name.charAt(0)}
-                </span>
+                <span className="text-sm font-medium text-primary">{user.name.charAt(0)}</span>
               </div>
             </div>
           )}
         </div>
-        
-        {/* Inline Voice Capture */}
         <InlineVoiceCapture onCapture={addTask} />
       </header>
 
@@ -95,73 +101,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = () => {
           <EmptyState type={allDone ? "all-done" : "no-tasks"} />
         ) : (
           <div className="space-y-6">
-            {/* Today */}
-            {todayTasks.length > 0 && (
-              <section>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                  Today
-                </h2>
-                <div className="space-y-3">
-                  {todayTasks.map(task => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onClick={() => setSelectedTask(task)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Upcoming */}
-            {upcomingTasks.length > 0 && (
-              <section>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                  Upcoming
-                </h2>
-                <div className="space-y-3">
-                  {upcomingTasks.map(task => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onClick={() => setSelectedTask(task)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Saved */}
-            {savedTasks.length > 0 && (
-              <section>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                  Saved
-                </h2>
-                <div className="space-y-3">
-                  {savedTasks.map(task => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onClick={() => setSelectedTask(task)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
+            {todayTasks.length > 0 && renderSection("Today", todayTasks)}
+            {upcomingTasks.length > 0 && renderSection("Upcoming", upcomingTasks)}
+            {savedTasks.length > 0 && renderSection("Saved", savedTasks)}
           </div>
         )}
       </main>
-
-
-      {/* Task detail sheet */}
-      <TaskDetailSheet
-        task={selectedTask}
-        isOpen={!!selectedTask}
-        onClose={() => setSelectedTask(null)}
-        onComplete={completeTask}
-        onSnooze={snoozeTask}
-        onDelete={deleteTask}
-      />
     </div>
   );
 };
