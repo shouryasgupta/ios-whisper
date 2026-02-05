@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Play, Pause, CalendarIcon, Trash2, Check, Circle, Volume2 } from "lucide-react";
+import { Play, Pause, CalendarIcon, Trash2, Check, Circle, Volume2, CheckCircle2 } from "lucide-react";
 import { Task } from "@/types/task";
 import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, addDays } from "date-fns";
@@ -51,6 +51,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [playProgress, setPlayProgress] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
+
+  const handleComplete = useCallback(() => {
+    if (task.isCompleted || justCompleted) return;
+    setJustCompleted(true);
+    // Delay the actual completion to let animation play
+    setTimeout(() => onComplete(task.id), 600);
+  }, [task.id, task.isCompleted, justCompleted, onComplete]);
 
   // Simulated 5-second audio playback
   useEffect(() => {
@@ -105,41 +113,53 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     [task.id, onUpdateReminder]
   );
 
+  const isStriking = justCompleted || task.isCompleted;
+
   return (
     <div
       className={cn(
         "w-full text-left p-4 bg-card rounded-2xl border shadow-sm",
-        "transition-all duration-200",
-        task.isCompleted && "opacity-50"
+        "transition-all duration-500",
+        isStriking && "opacity-50"
       )}
     >
       {/* Top row: completion circle + summary */}
       <div className="flex items-start gap-3">
         <button
-          onClick={() => onComplete(task.id)}
-          className="mt-0.5 shrink-0 transition-colors duration-200"
+          onClick={handleComplete}
+          className="mt-0.5 shrink-0 transition-all duration-300"
           aria-label="Mark complete"
         >
-          {task.isCompleted ? (
-            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-              <Check size={12} className="text-primary-foreground" />
-            </div>
+          {isStriking ? (
+            <CheckCircle2 size={20} className="text-primary animate-scale-in" />
           ) : (
             <Circle size={20} className="text-muted-foreground hover:text-primary transition-colors" />
           )}
         </button>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 relative">
           <p
             className={cn(
-              "font-medium text-card-foreground leading-snug",
-              task.isCompleted && "line-through"
+              "font-medium text-card-foreground leading-snug transition-all duration-500",
+              isStriking && "text-muted-foreground"
             )}
           >
-            {task.summary}
+            <span className="relative">
+              {task.summary}
+              {/* Animated strikethrough line */}
+              <span
+                className={cn(
+                  "absolute left-0 top-1/2 h-[1.5px] bg-muted-foreground/60 transition-all duration-500 ease-out",
+                  isStriking ? "w-full" : "w-0"
+                )}
+              />
+            </span>
           </p>
           {reminderText && (
-            <span className="text-xs text-muted-foreground mt-1 block">
+            <span className={cn(
+              "text-xs text-muted-foreground mt-1 block transition-opacity duration-500",
+              isStriking && "opacity-50"
+            )}>
               {reminderText}
             </span>
           )}
@@ -154,8 +174,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       )}
 
       {/* Action row */}
-      {!task.isCompleted && (
-        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
+      {!isStriking && (
+        <div className="flex items-center mt-3 pt-2 border-t border-border/50">
           <div className="flex items-center gap-1">
             {/* Play/Pause */}
             {task.hasAudio && (
@@ -247,17 +267,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
-          {/* Done button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-xs text-muted-foreground hover:text-primary"
-            onClick={() => onComplete(task.id)}
-          >
-            <Check size={14} className="mr-1" />
-            Done
-          </Button>
         </div>
       )}
     </div>
