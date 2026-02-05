@@ -21,6 +21,7 @@ import {
 interface TaskCardProps {
   task: Task;
   onComplete: (id: string) => void;
+  onUncomplete?: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateReminder: (id: string, date: Date) => void;
   onDeleteRecording: (id: string) => void;
@@ -43,6 +44,7 @@ const formatReminder = (reminder: Task["reminder"]): string => {
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,
   onComplete,
+  onUncomplete,
   onDelete,
   onUpdateReminder,
   onDeleteRecording,
@@ -169,7 +171,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       )}
 
       {/* Action row */}
-      {!isStriking && (
+      {!isStriking ? (
         <div className="flex items-center mt-3 pt-2 border-t border-border/50">
           <div className="flex items-center gap-1">
             {task.hasAudio && (
@@ -240,7 +242,18 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             </DropdownMenu>
           </div>
         </div>
-      )}
+      ) : task.isCompleted && onUncomplete ? (
+        <div className="flex items-center mt-3 pt-2 border-t border-border/50">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-muted-foreground hover:text-primary"
+            onClick={() => onUncomplete(task.id)}
+          >
+            Undo
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };
