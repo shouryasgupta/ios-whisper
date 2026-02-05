@@ -1,16 +1,39 @@
-import React, { useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useApp } from "@/context/AppContext";
 import { InlineVoiceCapture } from "@/components/InlineVoiceCapture";
 import { TaskCard } from "@/components/TaskCard";
 import { EmptyState } from "@/components/EmptyState";
 import { isToday, isFuture, addDays, isBefore } from "date-fns";
-import { Cloud, Watch } from "lucide-react";
+import { Cloud, Watch, ChevronDown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export const HomeScreen: React.FC = () => {
-  const { tasks, user, addTask, completeTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
+  const { tasks, user, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
+  const { toast } = useToast();
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  // Undo-aware complete handler
+  const handleComplete = useCallback((id: string) => {
+    const task = tasks.find(t => t.id === id);
+    completeTask(id);
+    toast({
+      title: "Task completed",
+      description: task?.summary,
+      action: (
+        <button
+          onClick={() => uncompleteTask(id)}
+          className="text-sm font-medium text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
+        >
+          Undo
+        </button>
+      ),
+      duration: 5000,
+    });
+  }, [tasks, completeTask, uncompleteTask, toast]);
 
   // Categorize tasks
-  const { todayTasks, upcomingTasks, savedTasks, completedCount } = useMemo(() => {
+  const { todayTasks, upcomingTasks, savedTasks, completedTasks } = useMemo(() => {
     const now = new Date();
     const in7Days = addDays(now, 7);
 
@@ -37,12 +60,12 @@ export const HomeScreen: React.FC = () => {
       todayTasks: today,
       upcomingTasks: upcoming,
       savedTasks: saved.filter(t => !today.includes(t) && !upcoming.includes(t)),
-      completedCount: completed.length,
+      completedTasks: completed,
     };
   }, [tasks]);
 
-  const hasNoTasks = todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
-  const allDone = hasNoTasks && completedCount > 0;
+  const hasNoActiveTasks = todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
+  const allDone = hasNoActiveTasks && completedTasks.length > 0;
 
   const renderSection = (title: string, sectionTasks: typeof todayTasks) => (
     <section>
@@ -54,7 +77,7 @@ export const HomeScreen: React.FC = () => {
           <TaskCard
             key={task.id}
             task={task}
-            onComplete={completeTask}
+            onComplete={handleComplete}
             onDelete={deleteTask}
             onUpdateReminder={updateTaskReminder}
             onDeleteRecording={deleteRecording}
@@ -97,14 +120,49 @@ export const HomeScreen: React.FC = () => {
 
       {/* Content */}
       <main className="px-5">
-        {hasNoTasks ? (
-          <EmptyState type={allDone ? "all-done" : "no-tasks"} />
+        {hasNoActiveTasks && completedTasks.length === 0 ? (
+          <EmptyState type="no-tasks" />
+        ) : hasNoActiveTasks && completedTasks.length > 0 ? (
+          <EmptyState type="all-done" />
         ) : (
           <div className="space-y-6">
             {todayTasks.length > 0 && renderSection("Today", todayTasks)}
             {upcomingTasks.length > 0 && renderSection("Upcoming", upcomingTasks)}
             {savedTasks.length > 0 && renderSection("Saved", savedTasks)}
           </div>
+        )}
+
+        {/* Completed section */}
+        {completedTasks.length > 0 && (
+          <section className="mt-8">
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 hover:text-foreground transition-colors"
+            >
+              <ChevronDown
+                size={14}
+                className={cn(
+                  "transition-transform duration-200",
+                  showCompleted && "rotate-180"
+                )}
+              />
+              Completed ({completedTasks.length})
+            </button>
+            {showCompleted && (
+              <div className="space-y-3 animate-fade-in">
+                {completedTasks.map(task => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onComplete={handleComplete}
+                    onDelete={deleteTask}
+                    onUpdateReminder={updateTaskReminder}
+                    onDeleteRecording={deleteRecording}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
         )}
       </main>
     </div>

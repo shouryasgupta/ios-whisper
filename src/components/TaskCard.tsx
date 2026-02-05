@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Play, Pause, CalendarIcon, Trash2, Check, Circle, Volume2, CheckCircle2 } from "lucide-react";
+import { Play, Pause, CalendarIcon, Trash2, Circle, Volume2, CheckCircle2 } from "lucide-react";
 import { Task } from "@/types/task";
 import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, addDays } from "date-fns";
@@ -56,7 +56,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const handleComplete = useCallback(() => {
     if (task.isCompleted || justCompleted) return;
     setJustCompleted(true);
-    // Delay the actual completion to let animation play
     setTimeout(() => onComplete(task.id), 600);
   }, [task.id, task.isCompleted, justCompleted, onComplete]);
 
@@ -69,7 +68,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           setIsPlaying(false);
           return 0;
         }
-        return prev + 2; // 100% in ~5 seconds (50 ticks * 100ms)
+        return prev + 2;
       });
     }, 100);
     return () => clearInterval(interval);
@@ -97,17 +96,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   );
 
   const handleQuickReminder = useCallback(
-    (option: "tomorrow" | "next-week" | "clear") => {
+    (option: "tomorrow" | "next-week") => {
       const now = new Date();
-      if (option === "tomorrow") {
-        const d = addDays(now, 1);
-        d.setHours(9, 0, 0, 0);
-        onUpdateReminder(task.id, d);
-      } else if (option === "next-week") {
-        const d = addDays(now, 7);
-        d.setHours(9, 0, 0, 0);
-        onUpdateReminder(task.id, d);
-      }
+      const d = option === "tomorrow" ? addDays(now, 1) : addDays(now, 7);
+      d.setHours(9, 0, 0, 0);
+      onUpdateReminder(task.id, d);
       setCalendarOpen(false);
     },
     [task.id, onUpdateReminder]
@@ -127,7 +120,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       <div className="flex items-start gap-3">
         <button
           onClick={handleComplete}
-          className="mt-0.5 shrink-0 transition-all duration-300"
+          className={cn(
+            "mt-0.5 shrink-0 transition-all duration-300",
+            isStriking && "animate-[bounce_0.4s_ease-out]"
+          )}
           aria-label="Mark complete"
         >
           {isStriking ? (
@@ -144,9 +140,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               isStriking && "text-muted-foreground"
             )}
           >
-            <span className="relative">
+            <span className="relative inline">
               {task.summary}
-              {/* Animated strikethrough line */}
               <span
                 className={cn(
                   "absolute left-0 top-1/2 h-[1.5px] bg-muted-foreground/60 transition-all duration-500 ease-out",
@@ -177,7 +172,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       {!isStriking && (
         <div className="flex items-center mt-3 pt-2 border-t border-border/50">
           <div className="flex items-center gap-1">
-            {/* Play/Pause */}
             {task.hasAudio && (
               <Button
                 variant="ghost"
@@ -190,7 +184,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </Button>
             )}
 
-            {/* Calendar popover */}
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -204,30 +197,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start" side="top">
                 <div className="flex gap-1 p-2 border-b border-border">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs h-7"
-                    onClick={() => handleQuickReminder("tomorrow")}
-                  >
+                  <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => handleQuickReminder("tomorrow")}>
                     Tomorrow
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs h-7"
-                    onClick={() => handleQuickReminder("next-week")}
-                  >
+                  <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => handleQuickReminder("next-week")}>
                     Next Week
                   </Button>
                 </div>
                 <Calendar
                   mode="single"
-                  selected={
-                    task.reminder.type === "specific"
-                      ? task.reminder.date
-                      : undefined
-                  }
+                  selected={task.reminder.type === "specific" ? task.reminder.date : undefined}
                   onSelect={handleDateSelect}
                   initialFocus
                   className="p-3 pointer-events-auto"
@@ -235,7 +214,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </PopoverContent>
             </Popover>
 
-            {/* Delete dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -249,18 +227,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="top">
                 {task.hasAudio && (
-                  <DropdownMenuItem
-                    onClick={() => onDeleteRecording(task.id)}
-                    className="text-sm"
-                  >
+                  <DropdownMenuItem onClick={() => onDeleteRecording(task.id)} className="text-sm">
                     <Volume2 size={14} className="mr-2" />
                     Delete Recording
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem
-                  onClick={() => onDelete(task.id)}
-                  className="text-sm text-destructive focus:text-destructive"
-                >
+                <DropdownMenuItem onClick={() => onDelete(task.id)} className="text-sm text-destructive focus:text-destructive">
                   <Trash2 size={14} className="mr-2" />
                   Delete Task
                 </DropdownMenuItem>

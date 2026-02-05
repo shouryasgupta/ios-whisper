@@ -4,6 +4,7 @@ import { Task, User, AppState, generateMockTask } from "@/types/task";
 interface AppContextType extends AppState {
   addTask: (text: string) => void;
   completeTask: (id: string) => void;
+  uncompleteTask: (id: string) => void;
   deleteTask: (id: string) => void;
   snoozeTask: (id: string, duration: "15min" | "1hr" | "tomorrow") => void;
   updateTaskReminder: (id: string, date: Date) => void;
@@ -81,6 +82,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setTasks(prev => prev.map(task => 
       task.id === id 
         ? { ...task, isCompleted: true, completedAt: new Date() }
+        : task
+    ));
+  }, []);
+
+  const uncompleteTask = useCallback((id: string) => {
+    setTasks(prev => prev.map(task => 
+      task.id === id 
+        ? { ...task, isCompleted: false, completedAt: undefined }
         : task
     ));
   }, []);
@@ -165,6 +174,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         showSignInPrompt,
         addTask,
         completeTask,
+        uncompleteTask,
         deleteTask,
         snoozeTask,
         updateTaskReminder,
