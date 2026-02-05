@@ -6,6 +6,8 @@ interface AppContextType extends AppState {
   completeTask: (id: string) => void;
   deleteTask: (id: string) => void;
   snoozeTask: (id: string, duration: "15min" | "1hr" | "tomorrow") => void;
+  updateTaskReminder: (id: string, date: Date) => void;
+  deleteRecording: (id: string) => void;
   signIn: (provider: "apple" | "google") => void;
   signOut: () => void;
   dismissSignInPrompt: () => void;
@@ -112,6 +114,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   }, []);
 
+  const updateTaskReminder = useCallback((id: string, date: Date) => {
+    setTasks(prev => prev.map(task =>
+      task.id === id ? { ...task, reminder: { type: "specific", date } } : task
+    ));
+  }, []);
+
+  const deleteRecording = useCallback((id: string) => {
+    setTasks(prev => prev.map(task =>
+      task.id === id ? { ...task, hasAudio: false } : task
+    ));
+  }, []);
+
   const signIn = useCallback((provider: "apple" | "google") => {
     // Simulated sign-in
     setUser({
@@ -153,6 +167,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         completeTask,
         deleteTask,
         snoozeTask,
+        updateTaskReminder,
+        deleteRecording,
         signIn,
         signOut,
         dismissSignInPrompt,
