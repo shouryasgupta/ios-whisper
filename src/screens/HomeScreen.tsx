@@ -3,7 +3,7 @@ import { useApp } from "@/context/AppContext";
 import { InlineVoiceCapture } from "@/components/InlineVoiceCapture";
 import { TaskCard } from "@/components/TaskCard";
 import { EmptyState } from "@/components/EmptyState";
-import { isToday, isFuture, addDays, isBefore } from "date-fns";
+import { isToday, isFuture, isPast, addDays, isBefore } from "date-fns";
 import { Cloud, Watch, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -33,12 +33,19 @@ export const HomeScreen: React.FC = () => {
   }, [tasks, completeTask, uncompleteTask, toast]);
 
   // Categorize tasks
-  const { todayTasks, upcomingTasks, savedTasks, completedTasks } = useMemo(() => {
+  const { overdueTasks, todayTasks, upcomingTasks, savedTasks, completedTasks } = useMemo(() => {
     const now = new Date();
     const in7Days = addDays(now, 7);
 
     const incomplete = tasks.filter(t => !t.isCompleted);
     const completed = tasks.filter(t => t.isCompleted);
+
+    const overdue = incomplete.filter(t => {
+      if (t.reminder.type === "specific") {
+        return isPast(t.reminder.date) && !isToday(t.reminder.date);
+      }
+      return false;
+    });
 
     const today = incomplete.filter(t => {
       if (t.reminder.type === "anytime") return true;
@@ -57,19 +64,23 @@ export const HomeScreen: React.FC = () => {
     const saved = incomplete.filter(t => t.kind === "note" || t.kind === "draft");
 
     return {
-      todayTasks: today,
+      overdueTasks: overdue,
+      todayTasks: today.filter(t => !overdue.includes(t)),
       upcomingTasks: upcoming,
-      savedTasks: saved.filter(t => !today.includes(t) && !upcoming.includes(t)),
+      savedTasks: saved.filter(t => !today.includes(t) && !upcoming.includes(t) && !overdue.includes(t)),
       completedTasks: completed,
     };
   }, [tasks]);
 
-  const hasNoActiveTasks = todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
+  const hasNoActiveTasks = overdueTasks.length === 0 && todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
   const allDone = hasNoActiveTasks && completedTasks.length > 0;
 
-  const renderSection = (title: string, sectionTasks: typeof todayTasks) => (
+  const renderSection = (title: string, sectionTasks: typeof todayTasks, isOverdue = false) => (
     <section>
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+      <h2 className={cn(
+        "text-sm font-semibold uppercase tracking-wide mb-3",
+        isOverdue ? "text-destructive" : "text-muted-foreground"
+      )}>
         {title}
       </h2>
       <div className="space-y-3">
@@ -126,6 +137,7 @@ export const HomeScreen: React.FC = () => {
           <EmptyState type="all-done" />
         ) : (
           <div className="space-y-6">
+            {overdueTasks.length > 0 && renderSection("Overdue", overdueTasks, true)}
             {todayTasks.length > 0 && renderSection("Today", todayTasks)}
             {upcomingTasks.length > 0 && renderSection("Upcoming", upcomingTasks)}
             {savedTasks.length > 0 && renderSection("Saved", savedTasks)}
@@ -155,6 +167,7 @@ export const HomeScreen: React.FC = () => {
                     key={task.id}
                     task={task}
                     onComplete={handleComplete}
+                    onUncomplete={uncompleteTask}
                     onDelete={deleteTask}
                     onUpdateReminder={updateTaskReminder}
                     onDeleteRecording={deleteRecording}
