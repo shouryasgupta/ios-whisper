@@ -8,10 +8,19 @@ import { cn } from "@/lib/utils";
 
 interface InlineVoiceCaptureProps {
   onCapture: (text: string) => void;
-  showCoachMark?: boolean;
 }
 
 type RecordingState = "idle" | "recording" | "paused";
+
+const suggestions = [
+  "Buy diapers tomorrow",
+  "Call mom on Tuesday",
+  "Book dentist appointment",
+  "Pick up dry cleaning after work",
+  "Email landlord about lease renewal",
+  "Order birthday gift for Sarah",
+  "Schedule car service this weekend",
+];
 
 const WaveformBar: React.FC<{ delay: number; paused: boolean }> = ({ delay, paused }) => (
   <div
@@ -25,11 +34,10 @@ const WaveformBar: React.FC<{ delay: number; paused: boolean }> = ({ delay, paus
 
 export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   onCapture,
-  showCoachMark = false,
 }) => {
   const [state, setState] = useState<RecordingState>("idle");
   const [elapsed, setElapsed] = useState(0);
-  const [coachVisible, setCoachVisible] = useState(showCoachMark);
+  const [suggestionIndex, setSuggestionIndex] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Timer: count up while recording (not paused)
@@ -55,11 +63,18 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
     };
   }, [state]);
 
-  // Dismiss coach mark on first tap
+  // Revolving suggestion text
+  useEffect(() => {
+    if (state !== "idle") return;
+    const timer = setInterval(() => {
+      setSuggestionIndex(prev => (prev + 1) % suggestions.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [state]);
+
   const handleStartRecording = () => {
     setState("recording");
     setElapsed(0);
-    if (coachVisible) setCoachVisible(false);
   };
 
   const handlePause = () => {
@@ -100,32 +115,12 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
     return (
       <div className="flex flex-col items-center py-4 relative">
         <MicButton onClick={handleStartRecording} size="large" />
-        <p className="text-sm text-muted-foreground mt-3">
-          Speak in your preferred language
+        {/* Revolving suggestion text */}
+        <p className="text-sm text-muted-foreground mt-3 h-5 overflow-hidden">
+          <span key={suggestionIndex} className="inline-block animate-fade-in">
+            "{suggestions[suggestionIndex]}"
+          </span>
         </p>
-
-        {/* Subtle coach mark for first-time users */}
-        {coachVisible && (
-          <div className="absolute -bottom-10 animate-fade-in">
-            <div className="bg-primary text-primary-foreground text-xs px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-              <span>Tap the mic to get started</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCoachVisible(false);
-                }}
-                className="ml-1 opacity-70 hover:opacity-100"
-                aria-label="Dismiss"
-              >
-                <X size={12} />
-              </button>
-            </div>
-            {/* Arrow pointing up */}
-            <div className="flex justify-center -mt-px">
-              <div className="w-2.5 h-2.5 bg-primary rotate-45 -translate-y-1.5" />
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -148,7 +143,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
       </p>
       <p className="text-sm text-muted-foreground mb-4">
         {state === "recording"
-          ? "Tell me what you want handled"
+          ? "Speak in your preferred language"
           : "Tap resume to continue"}
       </p>
 
