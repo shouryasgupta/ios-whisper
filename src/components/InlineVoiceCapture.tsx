@@ -155,7 +155,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
         {/* Cancel */}
         <Button
           onClick={handleCancel}
-          variant="ghost"
+          variant="secondary"
           className="w-12 h-12 rounded-full p-0"
           aria-label="Cancel recording"
         >
@@ -195,7 +195,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
       </div>
 
       <p className="text-xs text-muted-foreground mt-3">
-        {state === "recording" ? "Pause or stop when done" : "Resume or stop to save"}
+        {state === "recording" ? "Tap stop when you're done" : "Resume or stop to save"}
       </p>
     </div>
   );
