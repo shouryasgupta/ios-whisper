@@ -127,16 +127,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
 
   // ─── Recording / Paused state ───
   return (
-    <div className="flex flex-col items-center py-4 animate-fade-in relative">
-      {/* Cancel button — top right */}
-      <button
-        onClick={handleCancel}
-        className="absolute top-3 right-3 p-2 rounded-full hover:bg-secondary transition-colors"
-        aria-label="Cancel recording"
-      >
-        <X size={20} className="text-muted-foreground" />
-      </button>
-
+    <div className="flex flex-col items-center py-4 animate-fade-in">
       {/* Status text */}
       <p className="text-lg font-medium mb-1">
         {state === "recording" ? "Listening..." : "Paused"}
@@ -159,8 +150,28 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
         {formatTime(elapsed)}
       </div>
 
-      {/* Controls row: Pause/Resume + Stop */}
-      <div className="flex items-center gap-4">
+      {/* Controls row: Cancel + Stop + Pause/Resume */}
+      <div className="flex items-center gap-3">
+        {/* Cancel */}
+        <Button
+          onClick={handleCancel}
+          variant="ghost"
+          className="w-12 h-12 rounded-full p-0"
+          aria-label="Cancel recording"
+        >
+          <X size={20} />
+        </Button>
+
+        {/* Stop / Done — center, largest */}
+        <Button
+          onClick={handleStop}
+          size="lg"
+          className="w-14 h-14 rounded-full bg-destructive hover:bg-destructive/90 p-0"
+          aria-label="Stop and save recording"
+        >
+          <Square size={20} fill="currentColor" />
+        </Button>
+
         {/* Pause / Resume */}
         {state === "recording" ? (
           <Button
@@ -181,16 +192,6 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
             <Play size={20} className="ml-0.5" />
           </Button>
         )}
-
-        {/* Stop / Done */}
-        <Button
-          onClick={handleStop}
-          size="lg"
-          className="w-14 h-14 rounded-full bg-destructive hover:bg-destructive/90 p-0"
-          aria-label="Stop and save recording"
-        >
-          <Square size={20} fill="currentColor" />
-        </Button>
       </div>
 
       <p className="text-xs text-muted-foreground mt-3">
