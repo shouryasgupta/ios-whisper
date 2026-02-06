@@ -3,7 +3,6 @@ import { AppProvider, useApp } from "@/context/AppContext";
 import { BottomNav, TabType } from "@/components/BottomNav";
 import { SignInPrompt } from "@/components/SignInPrompt";
 import { ReminderNotification } from "@/components/ReminderNotification";
-import { OnboardingScreen } from "@/screens/OnboardingScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { WatchScreen } from "@/screens/WatchScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
@@ -25,7 +24,7 @@ const AppContent: React.FC = () => {
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [reminderTask, setReminderTask] = useState<Task | null>(null);
 
-  // Show first launch experience
+  // First launch uses coach mark instead of blocking onboarding
   const isFirstLaunch = captureCount === 0;
 
   // Simulate reminder notification
@@ -79,11 +78,6 @@ const AppContent: React.FC = () => {
       setReminderTask(null);
     }
   };
-
-  // First launch onboarding
-  if (isFirstLaunch) {
-    return <OnboardingScreen onStartCapture={() => addTask("First capture")} />;
-  }
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
