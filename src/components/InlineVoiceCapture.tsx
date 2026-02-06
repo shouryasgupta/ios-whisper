@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { X, Square, Pause, Play } from "lucide-react";
+import { Trash2, Check, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MicButton } from "@/components/MicButton";
 import { sampleTranscriptions } from "@/types/task";
@@ -152,46 +152,56 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
 
       {/* Controls row: Cancel + Stop + Pause/Resume */}
       <div className="flex items-center gap-3">
-        {/* Cancel */}
-        <Button
-          onClick={handleCancel}
-          variant="secondary"
-          className="w-12 h-12 rounded-full p-0"
-          aria-label="Cancel recording"
-        >
-          <X size={20} />
-        </Button>
+        {/* Cancel — destructive, discard recording */}
+        <div className="flex flex-col items-center gap-1">
+          <Button
+            onClick={handleCancel}
+            className="w-12 h-12 rounded-full p-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            aria-label="Cancel and discard recording"
+          >
+            <Trash2 size={20} />
+          </Button>
+          <span className="text-[10px] text-muted-foreground">Cancel</span>
+        </div>
 
-        {/* Stop / Done — center, largest */}
-        <Button
-          onClick={handleStop}
-          size="lg"
-          className="w-14 h-14 rounded-full bg-destructive hover:bg-destructive/90 p-0"
-          aria-label="Stop and save recording"
-        >
-          <Square size={20} fill="currentColor" />
-        </Button>
+        {/* Save — primary, positive action */}
+        <div className="flex flex-col items-center gap-1">
+          <Button
+            onClick={handleStop}
+            size="lg"
+            className="w-14 h-14 rounded-full p-0"
+            aria-label="Save recording"
+          >
+            <Check size={24} strokeWidth={3} />
+          </Button>
+          <span className="text-[10px] text-muted-foreground">Save</span>
+        </div>
 
         {/* Pause / Resume */}
-        {state === "recording" ? (
-          <Button
-            onClick={handlePause}
-            variant="secondary"
-            className="w-12 h-12 rounded-full p-0"
-            aria-label="Pause recording"
-          >
-            <Pause size={20} />
-          </Button>
-        ) : (
-          <Button
-            onClick={handleResume}
-            variant="secondary"
-            className="w-12 h-12 rounded-full p-0 animate-scale-in"
-            aria-label="Resume recording"
-          >
-            <Play size={20} className="ml-0.5" />
-          </Button>
-        )}
+        <div className="flex flex-col items-center gap-1">
+          {state === "recording" ? (
+            <Button
+              onClick={handlePause}
+              variant="secondary"
+              className="w-12 h-12 rounded-full p-0"
+              aria-label="Pause recording"
+            >
+              <Pause size={20} />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleResume}
+              variant="secondary"
+              className="w-12 h-12 rounded-full p-0 animate-scale-in"
+              aria-label="Resume recording"
+            >
+              <Play size={20} className="ml-0.5" />
+            </Button>
+          )}
+          <span className="text-[10px] text-muted-foreground">
+            {state === "recording" ? "Pause" : "Resume"}
+          </span>
+        </div>
       </div>
 
       <p className="text-xs text-muted-foreground mt-3">
