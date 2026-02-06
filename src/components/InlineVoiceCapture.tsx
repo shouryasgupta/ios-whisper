@@ -204,9 +204,6 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground mt-3">
-        {state === "recording" ? "Tap stop when you're done" : "Resume or stop to save"}
-      </p>
     </div>
   );
 };
