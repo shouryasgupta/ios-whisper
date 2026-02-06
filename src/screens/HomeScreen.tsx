@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export const HomeScreen: React.FC = () => {
-  const { tasks, user, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
+  const { tasks, user, captureCount, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -126,7 +126,7 @@ export const HomeScreen: React.FC = () => {
             </div>
           )}
         </div>
-        <InlineVoiceCapture onCapture={addTask} />
+        <InlineVoiceCapture onCapture={addTask} showCoachMark={captureCount === 0} />
       </header>
 
       {/* Content */}
