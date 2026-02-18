@@ -72,7 +72,7 @@ export const generateMockTask = (text: string): Task => {
     id: crypto.randomUUID(),
     summary: text.length > 60 ? text.slice(0, 57) + "..." : text,
     fullText: text,
-    kind: isBuyIntent ? "action" : "action",
+    kind: "action",
     reminder,
     hasAudio: true,
     hasChecklist: text.includes(" - ") || text.includes(","),
