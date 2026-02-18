@@ -12,6 +12,7 @@ import {
   Watch,
   Cloud,
 } from "lucide-react";
+import { WatchSetupSheet } from "@/components/WatchSetupSheet";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
@@ -79,6 +80,7 @@ const SettingsSection: React.FC<{ title: string; children: React.ReactNode }> = 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onSignIn }) => {
   const { user, signOut, deleteAllRecordings, deleteAccount, tasks } = useApp();
   const recordingCount = tasks.filter(t => t.hasAudio).length;
+  const [showWatchSetup, setShowWatchSetup] = useState(false);
 
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem("theme") === "dark";
@@ -151,6 +153,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onSignIn }) => {
                 icon={<Watch size={20} />}
                 label="Enable Watch capture"
                 value="Tap to set up"
+                onClick={() => setShowWatchSetup(true)}
               />
             )
           ) : (
@@ -265,6 +268,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onSignIn }) => {
           </p>
         </div>
       </main>
+
+      <WatchSetupSheet
+        open={showWatchSetup}
+        onOpenChange={setShowWatchSetup}
+      />
     </div>
   );
 };
