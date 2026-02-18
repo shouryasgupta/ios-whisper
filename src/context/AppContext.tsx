@@ -19,45 +19,7 @@ interface AppContextType extends AppState {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Initial mock tasks for demo
-const initialTasks: Task[] = [
-  {
-    id: "1",
-    summary: "Pick up dry cleaning after work",
-    fullText: "Pick up dry cleaning after work - the blue suit and two shirts",
-    kind: "action",
-    reminder: { type: "specific", date: new Date(Date.now() + 2 * 60 * 60 * 1000) },
-    hasAudio: true,
-    hasChecklist: false,
-    isBuyIntent: false,
-    createdAt: new Date(Date.now() - 30 * 60 * 1000),
-    isCompleted: false,
-  },
-  {
-    id: "2",
-    summary: "Order birthday cake for Emma",
-    fullText: "Order birthday cake for Emma's party on Saturday - chocolate with vanilla frosting",
-    kind: "action",
-    reminder: { type: "specific", date: new Date(Date.now() + 24 * 60 * 60 * 1000) },
-    hasAudio: true,
-    hasChecklist: false,
-    isBuyIntent: true,
-    buyLink: "https://www.amazon.com/s?k=birthday+cake",
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    isCompleted: false,
-  },
-  {
-    id: "3",
-    summary: "Dentist appointment reminder",
-    fullText: "Dentist appointment next Tuesday at 3pm - remember to bring insurance card",
-    kind: "note",
-    reminder: { type: "specific", date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) },
-    hasAudio: true,
-    hasChecklist: false,
-    isBuyIntent: false,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    isCompleted: false,
-  },
-];
+const initialTasks: Task[] = [];
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
