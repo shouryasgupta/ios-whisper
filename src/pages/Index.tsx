@@ -4,7 +4,6 @@ import { BottomNav, TabType } from "@/components/BottomNav";
 import { SignInPrompt } from "@/components/SignInPrompt";
 import { ReminderNotification } from "@/components/ReminderNotification";
 import { HomeScreen } from "@/screens/HomeScreen";
-import { WatchScreen } from "@/screens/WatchScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
 import { Task } from "@/types/task";
 
@@ -89,9 +88,6 @@ const AppContent: React.FC = () => {
 
       {/* Main content */}
       {activeTab === "home" && <HomeScreen />}
-      {activeTab === "watch" && (
-        <WatchScreen onSignIn={() => setShowSignInModal(true)} />
-      )}
       {activeTab === "settings" && (
         <SettingsScreen onSignIn={() => setShowSignInModal(true)} />
       )}
