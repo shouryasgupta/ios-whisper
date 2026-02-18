@@ -4,6 +4,7 @@ import { InlineVoiceCapture } from "@/components/InlineVoiceCapture";
 import { TaskCard } from "@/components/TaskCard";
 import { EmptyState } from "@/components/EmptyState";
 import { WatchNudgeBanner } from "@/components/WatchNudgeBanner";
+import { WatchAdoptionCard } from "@/components/WatchAdoptionCard";
 import { isToday, isFuture, isPast, addDays, isBefore } from "date-fns";
 import { Cloud, Watch, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -134,8 +135,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup }) => {
         <InlineVoiceCapture onCapture={addTask} />
       </header>
 
-      {/* Watch nudge banner — shown after first capture, suppressed after 2 dismissals */}
+      {/* Flow 1: post-first-capture nudge for non-signed-in users */}
       <WatchNudgeBanner onOpenSetup={onOpenWatchSetup ?? (() => {})} />
+      {/* Flow 2: adoption card for signed-in users without watch after 3+ captures */}
+      <WatchAdoptionCard onOpenSetup={onOpenWatchSetup ?? (() => {})} />
 
       {/* Content */}
       <main className="px-5">
