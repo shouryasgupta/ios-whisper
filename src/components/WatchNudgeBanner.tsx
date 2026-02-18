@@ -9,11 +9,12 @@ interface WatchNudgeBannerProps {
 export const WatchNudgeBanner: React.FC<WatchNudgeBannerProps> = ({ onOpenSetup }) => {
   const { firstCaptureDone, watchNudgeDismissCount, dismissWatchNudge, user } = useApp();
 
-  // Only show after first capture, suppress after 2 dismissals, hide if watch already active
+  // Flow 1: only for non-signed-in users; signed-in users get WatchAdoptionCard (Flow 2)
   const shouldShow =
     firstCaptureDone &&
     watchNudgeDismissCount < 2 &&
-    !(user?.watchCaptureEnabled);
+    !user &&
+    !(user as any)?.watchCaptureEnabled;
 
   if (!shouldShow) return null;
 

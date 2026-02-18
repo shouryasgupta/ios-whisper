@@ -14,10 +14,14 @@ interface AppContextType extends AppState {
   dismissSignInPrompt: () => void;
   deleteAllRecordings: () => void;
   deleteAccount: () => void;
-  // Watch nudge
+  // Watch nudge (Flow 1)
   firstCaptureDone: boolean;
   watchNudgeDismissCount: number;
   dismissWatchNudge: () => void;
+  // Watch adoption card (Flow 2)
+  watchAdoptionDismissed: boolean;
+  dismissWatchAdoption: () => void;
+  enableWatchCapture: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -31,11 +35,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [captureCount, setCaptureCount] = useState(0);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [watchNudgeDismissCount, setWatchNudgeDismissCount] = useState(0);
+  const [watchAdoptionDismissed, setWatchAdoptionDismissed] = useState(false);
 
   const firstCaptureDone = captureCount >= 1;
-  // Show watch nudge after first capture, suppressed after 2 dismissals or when watch is active
+
   const dismissWatchNudge = useCallback(() => {
     setWatchNudgeDismissCount(c => c + 1);
+  }, []);
+
+  const dismissWatchAdoption = useCallback(() => {
+    setWatchAdoptionDismissed(true);
+  }, []);
+
+  // Simulate enabling watch capture (in production this would update user record)
+  const enableWatchCapture = useCallback(() => {
+    setUser(prev => prev ? { ...prev, watchCaptureEnabled: true } : prev);
   }, []);
 
   const addTask = useCallback((text: string) => {
@@ -109,13 +123,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const signIn = useCallback((provider: "apple" | "google") => {
-    // Simulated sign-in
+    // Simulated sign-in — watch not yet enabled, so Flow 2 adoption card can trigger
     setUser({
       id: "user-1",
-      name: provider === "apple" ? "Jane Doe" : "Jane Doe",
+      name: "Jane Doe",
       email: provider === "apple" ? "jane@icloud.com" : "jane@gmail.com",
       isSignedIn: true,
-      watchCaptureEnabled: true,
+      watchCaptureEnabled: false,
     });
     setShowSignInPrompt(false);
   }, []);
@@ -145,6 +159,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         firstCaptureDone,
         watchNudgeDismissCount,
         dismissWatchNudge,
+        watchAdoptionDismissed,
+        dismissWatchAdoption,
+        enableWatchCapture,
         user,
         captureCount,
         showSignInPrompt,

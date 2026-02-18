@@ -6,7 +6,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-
+import { Button } from "@/components/ui/button";
+import { useApp } from "@/context/AppContext";
 
 interface WatchSetupSheetProps {
   open: boolean;
@@ -37,6 +38,7 @@ export const WatchSetupSheet: React.FC<WatchSetupSheetProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { enableWatchCapture, dismissWatchAdoption } = useApp();
   const [activeStep, setActiveStep] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -136,12 +138,24 @@ export const WatchSetupSheet: React.FC<WatchSetupSheetProps> = ({
         </div>
 
         {/* Footer hint */}
-        <div className="bg-secondary rounded-2xl px-4 py-3 flex items-start gap-3">
+        <div className="bg-secondary rounded-2xl px-4 py-3 flex items-start gap-3 mb-4">
           <CheckCircle2 size={18} className="text-primary mt-0.5 flex-shrink-0" />
           <p className="text-sm text-muted-foreground">
             Once set up, tap the complication on your watch and speak. Your capture syncs automatically.
           </p>
         </div>
+
+        {/* Done CTA — marks watch as active */}
+        <Button
+          className="w-full h-12 rounded-xl"
+          onClick={() => {
+            enableWatchCapture();
+            dismissWatchAdoption();
+            onOpenChange(false);
+          }}
+        >
+          Done — Watch is ready
+        </Button>
       </SheetContent>
     </Sheet>
   );
