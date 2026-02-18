@@ -7,6 +7,7 @@ import { HomeScreen } from "@/screens/HomeScreen";
 import { WatchScreen } from "@/screens/WatchScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
 import { Task } from "@/types/task";
+import { Sun, Moon } from "lucide-react";
 
 const AppContent: React.FC = () => {
   const { 
@@ -23,6 +24,12 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [reminderTask, setReminderTask] = useState<Task | null>(null);
+  const [isDark, setIsDark] = useState(false);
+
+  // Toggle dark class on <html> for preview comparison
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+  }, [isDark]);
 
   // First launch uses coach mark instead of blocking onboarding
   const isFirstLaunch = captureCount === 0;
@@ -81,6 +88,16 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
+      {/* Dark mode preview toggle */}
+      <button
+        onClick={() => setIsDark(d => !d)}
+        className="fixed top-4 right-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border shadow-sm text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+        aria-label="Toggle dark mode"
+      >
+        {isDark ? <Sun size={13} /> : <Moon size={13} />}
+        {isDark ? "Warm" : "Dark"}
+      </button>
+
       {/* Reminder notification */}
       {reminderTask && (
         <ReminderNotification
