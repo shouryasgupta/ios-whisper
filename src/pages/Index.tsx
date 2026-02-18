@@ -5,6 +5,7 @@ import { SignInPrompt } from "@/components/SignInPrompt";
 import { ReminderNotification } from "@/components/ReminderNotification";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
+import { WatchSetupSheet } from "@/components/WatchSetupSheet";
 import { Task } from "@/types/task";
 
 const AppContent: React.FC = () => {
@@ -20,6 +21,7 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [reminderTask, setReminderTask] = useState<Task | null>(null);
+  const [showWatchSetup, setShowWatchSetup] = useState(false);
 
   // Simulate reminder notification
   useEffect(() => {
@@ -87,13 +89,16 @@ const AppContent: React.FC = () => {
       )}
 
       {/* Main content */}
-      {activeTab === "home" && <HomeScreen />}
+      {activeTab === "home" && <HomeScreen onOpenWatchSetup={() => setShowWatchSetup(true)} />}
       {activeTab === "settings" && (
         <SettingsScreen onSignIn={() => setShowSignInModal(true)} />
       )}
 
       {/* Bottom navigation */}
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Watch setup sheet (triggered from nudge banner or Settings) */}
+      <WatchSetupSheet open={showWatchSetup} onOpenChange={setShowWatchSetup} />
 
       {/* Sign-in prompt (auto-triggered) */}
       <SignInPrompt

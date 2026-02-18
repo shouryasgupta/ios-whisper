@@ -14,6 +14,10 @@ interface AppContextType extends AppState {
   dismissSignInPrompt: () => void;
   deleteAllRecordings: () => void;
   deleteAccount: () => void;
+  // Watch nudge
+  firstCaptureDone: boolean;
+  watchNudgeDismissCount: number;
+  dismissWatchNudge: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -26,6 +30,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [captureCount, setCaptureCount] = useState(0);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+  const [watchNudgeDismissCount, setWatchNudgeDismissCount] = useState(0);
+
+  const firstCaptureDone = captureCount >= 1;
+  // Show watch nudge after first capture, suppressed after 2 dismissals or when watch is active
+  const dismissWatchNudge = useCallback(() => {
+    setWatchNudgeDismissCount(c => c + 1);
+  }, []);
 
   const addTask = useCallback((text: string) => {
     const newTask = generateMockTask(text);
@@ -131,6 +142,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <AppContext.Provider
       value={{
         tasks,
+        firstCaptureDone,
+        watchNudgeDismissCount,
+        dismissWatchNudge,
         user,
         captureCount,
         showSignInPrompt,
