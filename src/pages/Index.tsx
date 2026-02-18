@@ -10,7 +10,8 @@ import { Task } from "@/types/task";
 
 const AppContent: React.FC = () => {
   const { 
-    tasks, 
+    tasks,
+    user,
     showSignInPrompt, 
     signIn, 
     dismissSignInPrompt,
@@ -22,6 +23,7 @@ const AppContent: React.FC = () => {
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [reminderTask, setReminderTask] = useState<Task | null>(null);
   const [showWatchSetup, setShowWatchSetup] = useState(false);
+  const [pendingWatchSetup, setPendingWatchSetup] = useState(false);
 
   // Simulate reminder notification
   useEffect(() => {
@@ -59,6 +61,21 @@ const AppContent: React.FC = () => {
   const handleSignIn = (provider: "apple" | "google") => {
     signIn(provider);
     setShowSignInModal(false);
+    // If sign-in was triggered by a watch setup attempt, open the sheet now
+    if (pendingWatchSetup) {
+      setPendingWatchSetup(false);
+      setTimeout(() => setShowWatchSetup(true), 400);
+    }
+  };
+
+  // Auth-gated entry to watch setup
+  const handleOpenWatchSetup = () => {
+    if (!user) {
+      setPendingWatchSetup(true);
+      setShowSignInModal(true);
+    } else {
+      setShowWatchSetup(true);
+    }
   };
 
   const handleReminderDone = () => {
@@ -89,7 +106,7 @@ const AppContent: React.FC = () => {
       )}
 
       {/* Main content */}
-      {activeTab === "home" && <HomeScreen onOpenWatchSetup={() => setShowWatchSetup(true)} />}
+      {activeTab === "home" && <HomeScreen onOpenWatchSetup={handleOpenWatchSetup} />}
       {activeTab === "settings" && (
         <SettingsScreen onSignIn={() => setShowSignInModal(true)} />
       )}
