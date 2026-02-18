@@ -13,8 +13,7 @@ export const WatchNudgeBanner: React.FC<WatchNudgeBannerProps> = ({ onOpenSetup 
   const shouldShow =
     firstCaptureDone &&
     watchNudgeDismissCount < 2 &&
-    !user &&
-    !(user as any)?.watchCaptureEnabled;
+    !user;
 
   if (!shouldShow) return null;
 

@@ -79,7 +79,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup }) => {
   }, [tasks]);
 
   const hasNoActiveTasks = overdueTasks.length === 0 && todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
-  const allDone = hasNoActiveTasks && completedTasks.length > 0;
 
   const renderSection = (title: string, sectionTasks: typeof todayTasks, isOverdue = false) => (
     <section>
