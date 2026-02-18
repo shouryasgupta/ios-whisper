@@ -1,16 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { 
-  User, 
   LogOut, 
   Trash2, 
   Volume2, 
   Shield, 
   Info,
   ChevronRight,
-  LogIn
+  LogIn,
+  Moon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +33,7 @@ interface SettingsItemProps {
   value?: string;
   onClick?: () => void;
   danger?: boolean;
+  trailing?: React.ReactNode;
 }
 
 const SettingsItem: React.FC<SettingsItemProps> = ({ 
@@ -40,7 +41,8 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
   label, 
   value, 
   onClick,
-  danger 
+  danger,
+  trailing,
 }) => (
   <button
     onClick={onClick}
@@ -53,7 +55,8 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
     </span>
     <span className="flex-1 text-left font-medium">{label}</span>
     {value && <span className="text-muted-foreground text-sm">{value}</span>}
-    {onClick && !danger && <ChevronRight size={18} className="text-muted-foreground" />}
+    {trailing}
+    {!trailing && onClick && !danger && <ChevronRight size={18} className="text-muted-foreground" />}
   </button>
 );
 
@@ -73,8 +76,16 @@ const SettingsSection: React.FC<{ title: string; children: React.ReactNode }> = 
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onSignIn }) => {
   const { user, signOut, deleteAllRecordings, deleteAccount, tasks } = useApp();
-
   const recordingCount = tasks.filter(t => t.hasAudio).length;
+
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  }, [isDark]);
 
   return (
     <div className="min-h-screen pb-20">
@@ -115,6 +126,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onSignIn }) => {
               onClick={onSignIn}
             />
           )}
+        </SettingsSection>
+
+        {/* Appearance Section */}
+        <SettingsSection title="Appearance">
+          <SettingsItem
+            icon={<Moon size={20} />}
+            label="Dark mode"
+            trailing={
+              <Switch
+                checked={isDark}
+                onCheckedChange={setIsDark}
+                onClick={e => e.stopPropagation()}
+              />
+            }
+          />
         </SettingsSection>
 
         {/* Privacy Section */}
