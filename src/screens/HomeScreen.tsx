@@ -3,12 +3,17 @@ import { useApp } from "@/context/AppContext";
 import { InlineVoiceCapture } from "@/components/InlineVoiceCapture";
 import { TaskCard } from "@/components/TaskCard";
 import { EmptyState } from "@/components/EmptyState";
+import { WatchNudgeBanner } from "@/components/WatchNudgeBanner";
 import { isToday, isFuture, isPast, addDays, isBefore } from "date-fns";
 import { Cloud, Watch, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-export const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  onOpenWatchSetup?: () => void;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup }) => {
   const { tasks, user, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
@@ -128,6 +133,9 @@ export const HomeScreen: React.FC = () => {
         </div>
         <InlineVoiceCapture onCapture={addTask} />
       </header>
+
+      {/* Watch nudge banner — shown after first capture, suppressed after 2 dismissals */}
+      <WatchNudgeBanner onOpenSetup={onOpenWatchSetup ?? (() => {})} />
 
       {/* Content */}
       <main className="px-5">
