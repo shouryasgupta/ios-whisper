@@ -161,7 +161,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onSignIn }) => {
               icon={<Watch size={20} />}
               label="Enable Watch capture"
               value="Sign in required"
-              onClick={onSignIn}
+              onClick={() => setShowWatchSetup(true)}
             />
           )}
         </SettingsSection>
