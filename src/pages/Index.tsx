@@ -11,20 +11,16 @@ import { Task } from "@/types/task";
 const AppContent: React.FC = () => {
   const { 
     tasks, 
-    captureCount, 
     showSignInPrompt, 
     signIn, 
     dismissSignInPrompt,
     completeTask,
     snoozeTask,
-    addTask,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [reminderTask, setReminderTask] = useState<Task | null>(null);
-  // First launch uses coach mark instead of blocking onboarding
-  const isFirstLaunch = captureCount === 0;
 
   // Simulate reminder notification
   useEffect(() => {
