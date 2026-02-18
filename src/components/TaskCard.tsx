@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Play, Pause, CalendarIcon, Trash2, Circle, Volume2, CheckCircle2 } from "lucide-react";
+import { Play, Pause, CalendarIcon, Trash2, Circle, Volume2, CheckCircle2, Clock } from "lucide-react";
 import { Task } from "@/types/task";
 import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, addDays } from "date-fns";
@@ -55,6 +55,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false);
 
+  // Time picker state — initialized from existing reminder date
+  const existingDate = task.reminder.type === "specific" ? task.reminder.date : null;
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(existingDate ?? undefined);
+  const [timeHour, setTimeHour] = useState(() => {
+    const d = existingDate;
+    if (!d) return "09";
+    const h = d.getHours();
+    return String(h % 12 || 12).padStart(2, "0");
+  });
+  const [timeMinute, setTimeMinute] = useState(() =>
+    existingDate ? String(existingDate.getMinutes()).padStart(2, "0") : "00"
+  );
+  const [timePeriod, setTimePeriod] = useState<"AM" | "PM">(() => {
+    if (!existingDate) return "AM";
+    return existingDate.getHours() >= 12 ? "PM" : "AM";
+  });
+
   const handleComplete = useCallback(() => {
     if (task.isCompleted || justCompleted) return;
     setJustCompleted(true);
@@ -87,25 +104,35 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   }, [isPlaying]);
 
+  const buildDateWithTime = useCallback((date: Date) => {
+    let h = parseInt(timeHour, 10) % 12;
+    if (timePeriod === "PM") h += 12;
+    const m = parseInt(timeMinute, 10) || 0;
+    const d = new Date(date);
+    d.setHours(h, m, 0, 0);
+    return d;
+  }, [timeHour, timeMinute, timePeriod]);
+
   const handleDateSelect = useCallback(
     (date: Date | undefined) => {
-      if (date) {
-        onUpdateReminder(task.id, date);
-        setCalendarOpen(false);
-      }
+      setSelectedDate(date);
     },
-    [task.id, onUpdateReminder]
+    []
   );
+
+  const handleConfirmReminder = useCallback(() => {
+    const base = selectedDate ?? new Date();
+    onUpdateReminder(task.id, buildDateWithTime(base));
+    setCalendarOpen(false);
+  }, [selectedDate, task.id, onUpdateReminder, buildDateWithTime]);
 
   const handleQuickReminder = useCallback(
     (option: "tomorrow" | "next-week") => {
       const now = new Date();
       const d = option === "tomorrow" ? addDays(now, 1) : addDays(now, 7);
-      d.setHours(9, 0, 0, 0);
-      onUpdateReminder(task.id, d);
-      setCalendarOpen(false);
+      setSelectedDate(d);
     },
-    [task.id, onUpdateReminder]
+    []
   );
 
   const isStriking = justCompleted || task.isCompleted;
@@ -198,6 +225,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start" side="top">
+                {/* Quick picks */}
                 <div className="flex gap-1 p-2 border-b border-border">
                   <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => handleQuickReminder("tomorrow")}>
                     Tomorrow
@@ -206,13 +234,62 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     Next Week
                   </Button>
                 </div>
+
+                {/* Calendar */}
                 <Calendar
                   mode="single"
-                  selected={task.reminder.type === "specific" ? task.reminder.date : undefined}
+                  selected={selectedDate}
                   onSelect={handleDateSelect}
                   initialFocus
                   className="p-3 pointer-events-auto"
                 />
+
+                {/* Time picker */}
+                <div className="px-3 pb-2 border-t border-border pt-2">
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={13} className="text-muted-foreground shrink-0" />
+                    <input
+                      type="number"
+                      min={1}
+                      max={12}
+                      value={timeHour}
+                      onChange={e => setTimeHour(e.target.value.padStart(2, "0"))}
+                      className="w-10 text-center rounded border border-input bg-background text-sm py-1 focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    <span className="text-muted-foreground font-medium">:</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      value={timeMinute}
+                      onChange={e => setTimeMinute(e.target.value.padStart(2, "0"))}
+                      className="w-10 text-center rounded border border-input bg-background text-sm py-1 focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    <div className="flex rounded border border-input overflow-hidden text-xs">
+                      {(["AM", "PM"] as const).map(p => (
+                        <button
+                          key={p}
+                          onClick={() => setTimePeriod(p)}
+                          className={cn(
+                            "px-2 py-1 transition-colors",
+                            timePeriod === p
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background text-muted-foreground hover:bg-secondary"
+                          )}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Confirm */}
+                <div className="px-3 pb-3">
+                  <Button size="sm" className="w-full h-8 text-xs" onClick={handleConfirmReminder}>
+                    Set reminder
+                  </Button>
+                </div>
               </PopoverContent>
             </Popover>
 
