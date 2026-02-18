@@ -1,8 +1,8 @@
 import React from "react";
-import { Home, Settings, Watch } from "lucide-react";
+import { Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type TabType = "home" | "watch" | "settings";
+export type TabType = "home" | "settings";
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -40,12 +40,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) 
           label="Home"
           isActive={activeTab === "home"}
           onClick={() => onTabChange("home")}
-        />
-        <NavItem
-          icon={<Watch size={22} />}
-          label="Watch"
-          isActive={activeTab === "watch"}
-          onClick={() => onTabChange("watch")}
         />
         <NavItem
           icon={<Settings size={22} />}

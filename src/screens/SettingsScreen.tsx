@@ -9,6 +9,8 @@ import {
   ChevronRight,
   LogIn,
   Moon,
+  Watch,
+  Cloud,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -123,6 +125,39 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onSignIn }) => {
               icon={<LogIn size={20} />}
               label="Sign in"
               value="Sync across devices"
+              onClick={onSignIn}
+            />
+          )}
+        </SettingsSection>
+
+        {/* Watch Section */}
+        <SettingsSection title="Apple Watch">
+          {user ? (
+            user.watchCaptureEnabled ? (
+              <div className="flex items-center gap-4 px-4 py-3">
+                <span className="text-muted-foreground">
+                  <Watch size={20} />
+                </span>
+                <div className="flex-1">
+                  <p className="font-medium">Watch capture enabled</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <Cloud size={11} className="text-success" />
+                    <span className="text-xs text-success">All synced</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <SettingsItem
+                icon={<Watch size={20} />}
+                label="Enable Watch capture"
+                value="Tap to set up"
+              />
+            )
+          ) : (
+            <SettingsItem
+              icon={<Watch size={20} />}
+              label="Enable Watch capture"
+              value="Sign in required"
               onClick={onSignIn}
             />
           )}
