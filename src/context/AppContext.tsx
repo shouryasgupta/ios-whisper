@@ -1,5 +1,15 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { Task, User, AppState, generateMockTask } from "@/types/task";
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from "react";
+import { Task, User, AppState, NudgeType, ActivationState, NudgeDismissState, generateMockTask } from "@/types/task";
+
+// Cooldown/suppression config (ms)
+const NUDGE_CONFIG: Record<NudgeType, { cooldownMs: number; suppressionMs: number; maxDismissals: number }> = {
+  "sign-in":    { cooldownMs: 7 * 24 * 60 * 60 * 1000, suppressionMs: 30 * 24 * 60 * 60 * 1000, maxDismissals: 2 },
+  "watch-setup":{ cooldownMs: 3 * 24 * 60 * 60 * 1000, suppressionMs: 14 * 24 * 60 * 60 * 1000, maxDismissals: 2 },
+  "watch-usage":{ cooldownMs: 3 * 24 * 60 * 60 * 1000, suppressionMs: 14 * 24 * 60 * 60 * 1000, maxDismissals: 1 },
+  "power":      { cooldownMs: 14 * 24 * 60 * 60 * 1000, suppressionMs: Infinity, maxDismissals: 1 },
+};
+
+const defaultDismissState = (): NudgeDismissState => ({ dismissCount: 0, lastDismissedAt: null, lastShownAt: null });
 
 interface AppContextType extends AppState {
   addTask: (text: string) => void;
@@ -9,45 +19,105 @@ interface AppContextType extends AppState {
   snoozeTask: (id: string, duration: "15min" | "1hr" | "tomorrow") => void;
   updateTaskReminder: (id: string, date: Date) => void;
   deleteRecording: (id: string) => void;
-  signIn: (provider: "apple" | "google") => void;
+  signIn: (provider: "apple" | "google", source?: "nudge" | "organic") => void;
   signOut: () => void;
-  dismissSignInPrompt: () => void;
   deleteAllRecordings: () => void;
   deleteAccount: () => void;
-  // Watch nudge (Flow 1)
-  firstCaptureDone: boolean;
-  watchNudgeDismissCount: number;
-  dismissWatchNudge: () => void;
-  // Watch adoption card (Flow 2)
-  watchAdoptionDismissed: boolean;
-  dismissWatchAdoption: () => void;
+  // Nudge engine
+  primaryNudge: NudgeType | null;
+  activationState: ActivationState;
+  dismissNudge: (type: NudgeType) => void;
   enableWatchCapture: () => void;
+  // Recording guard
+  isRecording: boolean;
+  setIsRecording: (v: boolean) => void;
+  // Sign-in source tracking
+  signInSource: "nudge" | "organic" | null;
+  showPostSignInBridge: boolean;
+  dismissPostSignInBridge: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Initial mock tasks for demo
-const initialTasks: Task[] = [];
-
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [captureCount, setCaptureCount] = useState(0);
-  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
-  const [watchNudgeDismissCount, setWatchNudgeDismissCount] = useState(0);
-  const [watchAdoptionDismissed, setWatchAdoptionDismissed] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [signInSource, setSignInSource] = useState<"nudge" | "organic" | null>(null);
+  const [showPostSignInBridge, setShowPostSignInBridge] = useState(false);
 
-  const firstCaptureDone = captureCount >= 1;
+  // Nudge dismiss states
+  const [nudgeDismiss, setNudgeDismiss] = useState<Record<NudgeType, NudgeDismissState>>({
+    "sign-in": defaultDismissState(),
+    "watch-setup": defaultDismissState(),
+    "watch-usage": defaultDismissState(),
+    "power": defaultDismissState(),
+  });
 
-  const dismissWatchNudge = useCallback(() => {
-    setWatchNudgeDismissCount(c => c + 1);
+  // Derive activation state
+  const activationState = useMemo((): ActivationState => {
+    if (!user && captureCount === 0) return "new_no_capture";
+    if (!user && captureCount > 0) return "anonymous_active";
+    if (user && !user.watchCaptureEnabled) return "signed_in_no_watch";
+    if (user && user.watchCaptureEnabled && user.watchCaptures < 2) return "watch_enabled_inactive";
+    if (user && user.watchCaptureEnabled && user.watchCaptures >= 2) return "watch_active";
+    return "new_no_capture";
+  }, [user, captureCount]);
+
+  // Check if a nudge is suppressed by cooldown/dismissal rules
+  const isNudgeSuppressed = useCallback((type: NudgeType): boolean => {
+    const config = NUDGE_CONFIG[type];
+    const state = nudgeDismiss[type];
+    const now = Date.now();
+
+    // Max dismissals reached → suppressed for suppressionMs
+    if (state.dismissCount >= config.maxDismissals) {
+      if (!state.lastDismissedAt) return true;
+      return now - state.lastDismissedAt < config.suppressionMs;
+    }
+
+    // Cooldown after last dismissal
+    if (state.lastDismissedAt && now - state.lastDismissedAt < config.cooldownMs) {
+      return true;
+    }
+
+    return false;
+  }, [nudgeDismiss]);
+
+  // Priority-based nudge selection
+  const primaryNudge = useMemo((): NudgeType | null => {
+    if (isRecording) return null;
+
+    // Sign-In: anonymous with 3+ captures
+    if (!user && captureCount >= 3 && !isNudgeSuppressed("sign-in")) {
+      return "sign-in";
+    }
+
+    // Watch Setup: signed in, no watch
+    if (user && !user.watchCaptureEnabled && !isNudgeSuppressed("watch-setup")) {
+      return "watch-setup";
+    }
+
+    // Watch Usage: watch enabled but < 2 watch captures
+    if (user && user.watchCaptureEnabled && user.watchCaptures < 2 && !isNudgeSuppressed("watch-usage")) {
+      return "watch-usage";
+    }
+
+    return null;
+  }, [user, captureCount, isRecording, isNudgeSuppressed]);
+
+  const dismissNudge = useCallback((type: NudgeType) => {
+    setNudgeDismiss(prev => ({
+      ...prev,
+      [type]: {
+        dismissCount: prev[type].dismissCount + 1,
+        lastDismissedAt: Date.now(),
+        lastShownAt: prev[type].lastShownAt,
+      },
+    }));
   }, []);
 
-  const dismissWatchAdoption = useCallback(() => {
-    setWatchAdoptionDismissed(true);
-  }, []);
-
-  // Simulate enabling watch capture (in production this would update user record)
   const enableWatchCapture = useCallback(() => {
     setUser(prev => prev ? { ...prev, watchCaptureEnabled: true } : prev);
   }, []);
@@ -55,29 +125,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addTask = useCallback((text: string) => {
     const newTask = generateMockTask(text);
     setTasks(prev => [newTask, ...prev]);
-    
-    const newCount = captureCount + 1;
-    setCaptureCount(newCount);
-    
-    // Show sign-in prompt after 2 captures if not signed in
-    if (newCount === 2 && !user) {
-      setTimeout(() => setShowSignInPrompt(true), 1500);
-    }
-  }, [captureCount, user]);
+    setCaptureCount(prev => prev + 1);
+  }, []);
 
   const completeTask = useCallback((id: string) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id 
-        ? { ...task, isCompleted: true, completedAt: new Date() }
-        : task
+    setTasks(prev => prev.map(task =>
+      task.id === id ? { ...task, isCompleted: true, completedAt: new Date() } : task
     ));
   }, []);
 
   const uncompleteTask = useCallback((id: string) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id 
-        ? { ...task, isCompleted: false, completedAt: undefined }
-        : task
+    setTasks(prev => prev.map(task =>
+      task.id === id ? { ...task, isCompleted: false, completedAt: undefined } : task
     ));
   }, []);
 
@@ -88,31 +147,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const snoozeTask = useCallback((id: string, duration: "15min" | "1hr" | "tomorrow") => {
     setTasks(prev => prev.map(task => {
       if (task.id !== id) return task;
-      
       const now = new Date();
       let newDate: Date;
-      
       switch (duration) {
-        case "15min":
-          newDate = new Date(now.getTime() + 15 * 60 * 1000);
-          break;
-        case "1hr":
-          newDate = new Date(now.getTime() + 60 * 60 * 1000);
-          break;
+        case "15min": newDate = new Date(now.getTime() + 15 * 60 * 1000); break;
+        case "1hr": newDate = new Date(now.getTime() + 60 * 60 * 1000); break;
         case "tomorrow":
           newDate = new Date(now);
           newDate.setDate(newDate.getDate() + 1);
           newDate.setHours(9, 0, 0, 0);
           break;
       }
-      
-      return { ...task, reminder: { type: "specific", date: newDate } };
+      return { ...task, reminder: { type: "specific" as const, date: newDate } };
     }));
   }, []);
 
   const updateTaskReminder = useCallback((id: string, date: Date) => {
     setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, reminder: { type: "specific", date } } : task
+      task.id === id ? { ...task, reminder: { type: "specific" as const, date } } : task
     ));
   }, []);
 
@@ -122,24 +174,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     ));
   }, []);
 
-  const signIn = useCallback((provider: "apple" | "google") => {
-    // Simulated sign-in — watch not yet enabled, so Flow 2 adoption card can trigger
+  const signIn = useCallback((provider: "apple" | "google", source: "nudge" | "organic" = "organic") => {
+    setSignInSource(source);
     setUser({
       id: "user-1",
       name: "Jane Doe",
       email: provider === "apple" ? "jane@icloud.com" : "jane@gmail.com",
       isSignedIn: true,
       watchCaptureEnabled: false,
+      watchCaptures: 0,
     });
-    setShowSignInPrompt(false);
+    if (source === "nudge") {
+      setShowPostSignInBridge(true);
+    }
   }, []);
 
   const signOut = useCallback(() => {
     setUser(null);
+    setSignInSource(null);
+    setShowPostSignInBridge(false);
   }, []);
 
-  const dismissSignInPrompt = useCallback(() => {
-    setShowSignInPrompt(false);
+  const dismissPostSignInBridge = useCallback(() => {
+    setShowPostSignInBridge(false);
+    setSignInSource(null);
   }, []);
 
   const deleteAllRecordings = useCallback(() => {
@@ -150,21 +208,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setTasks([]);
     setUser(null);
     setCaptureCount(0);
+    setSignInSource(null);
+    setShowPostSignInBridge(false);
   }, []);
 
   return (
     <AppContext.Provider
       value={{
         tasks,
-        firstCaptureDone,
-        watchNudgeDismissCount,
-        dismissWatchNudge,
-        watchAdoptionDismissed,
-        dismissWatchAdoption,
-        enableWatchCapture,
         user,
         captureCount,
-        showSignInPrompt,
+        showSignInPrompt: false, // no longer auto-triggered; nudge engine handles it
+        primaryNudge,
+        activationState,
+        dismissNudge,
+        enableWatchCapture,
+        isRecording,
+        setIsRecording,
+        signInSource,
+        showPostSignInBridge,
+        dismissPostSignInBridge,
         addTask,
         completeTask,
         uncompleteTask,
@@ -174,7 +237,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         deleteRecording,
         signIn,
         signOut,
-        dismissSignInPrompt,
         deleteAllRecordings,
         deleteAccount,
       }}

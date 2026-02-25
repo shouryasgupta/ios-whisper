@@ -3,6 +3,7 @@ import { Trash2, Check, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MicButton } from "@/components/MicButton";
 import { sampleTranscriptions } from "@/types/task";
+import { useApp } from "@/context/AppContext";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ const WaveformBar: React.FC<{ delay: number; paused: boolean }> = ({ delay, paus
 export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   onCapture,
 }) => {
+  const { setIsRecording } = useApp();
   const [state, setState] = useState<RecordingState>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -75,6 +77,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   const handleStartRecording = () => {
     setState("recording");
     setElapsed(0);
+    setIsRecording(true);
   };
 
   const handlePause = () => {
@@ -88,6 +91,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   const handleStop = useCallback(() => {
     setState("idle");
     setElapsed(0);
+    setIsRecording(false);
 
     const randomText =
       sampleTranscriptions[Math.floor(Math.random() * sampleTranscriptions.length)];
@@ -102,6 +106,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   const handleCancel = () => {
     setState("idle");
     setElapsed(0);
+    setIsRecording(false);
   };
 
   const formatTime = (seconds: number) => {

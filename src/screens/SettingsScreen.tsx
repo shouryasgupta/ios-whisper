@@ -134,35 +134,39 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onSignIn }) => {
 
         {/* Watch Section */}
         <SettingsSection title="Apple Watch">
-          {user ? (
-            user.watchCaptureEnabled ? (
-              <div className="flex items-center gap-4 px-4 py-3">
-                <span className="text-muted-foreground">
-                  <Watch size={20} />
-                </span>
-                <div className="flex-1">
-                  <p className="font-medium">Watch capture enabled</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <Cloud size={11} className="text-success" />
-                    <span className="text-xs text-success">All synced</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <SettingsItem
-                icon={<Watch size={20} />}
-                label="Enable Watch capture"
-                value="Tap to set up"
-                onClick={() => setShowWatchSetup(true)}
-              />
-            )
-          ) : (
+          {!user ? (
             <SettingsItem
               icon={<Watch size={20} />}
-              label="Enable Watch capture"
-              value="Sign in required"
+              label="Watch capture"
+              value="No watch connected"
+            />
+          ) : !user.watchCaptureEnabled ? (
+            <SettingsItem
+              icon={<Watch size={20} />}
+              label="Watch capture"
+              value="Setup required"
               onClick={() => setShowWatchSetup(true)}
             />
+          ) : user.watchCaptures < 2 ? (
+            <SettingsItem
+              icon={<Watch size={20} />}
+              label="Watch capture"
+              value="Try watch capture"
+              onClick={() => setShowWatchSetup(true)}
+            />
+          ) : (
+            <div className="flex items-center gap-4 px-4 py-3">
+              <span className="text-muted-foreground">
+                <Watch size={20} />
+              </span>
+              <div className="flex-1">
+                <p className="font-medium">Watch capture</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Cloud size={11} className="text-success" />
+                  <span className="text-xs text-success">Active</span>
+                </div>
+              </div>
+            </div>
           )}
         </SettingsSection>
 
