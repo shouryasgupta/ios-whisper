@@ -284,7 +284,7 @@ export const WatchSetupSheet: React.FC<WatchSetupSheetProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { enableWatchCapture, dismissWatchAdoption, captureCount } = useApp();
+  const { enableWatchCapture, captureCount } = useApp();
   const [step, setStep] = useState<Step>(1);
   const [transitioning, setTransitioning] = useState(false);
 
@@ -305,9 +305,8 @@ export const WatchSetupSheet: React.FC<WatchSetupSheetProps> = ({
 
   const handleDone = useCallback(() => {
     enableWatchCapture();
-    dismissWatchAdoption();
     onOpenChange(false);
-  }, [enableWatchCapture, dismissWatchAdoption, onOpenChange]);
+  }, [enableWatchCapture, onOpenChange]);
 
   const handleDismiss = useCallback(() => {
     onOpenChange(false);

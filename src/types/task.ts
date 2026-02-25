@@ -1,5 +1,21 @@
 export type TaskKind = "action" | "note" | "draft";
 
+export type NudgeType = "sign-in" | "watch-setup" | "watch-usage" | "power";
+
+export type ActivationState =
+  | "new_no_capture"
+  | "anonymous_active"
+  | "signed_in_no_watch"
+  | "watch_enabled_inactive"
+  | "watch_active"
+  | "power_user";
+
+export interface NudgeDismissState {
+  dismissCount: number;
+  lastDismissedAt: number | null;
+  lastShownAt: number | null;
+}
+
 export type ReminderTime = 
   | { type: "specific"; date: Date }
   | { type: "anytime" }
@@ -28,6 +44,7 @@ export interface User {
   avatarUrl?: string;
   isSignedIn: boolean;
   watchCaptureEnabled: boolean;
+  watchCaptures: number;
 }
 
 export interface AppState {

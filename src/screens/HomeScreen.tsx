@@ -3,8 +3,7 @@ import { useApp } from "@/context/AppContext";
 import { InlineVoiceCapture } from "@/components/InlineVoiceCapture";
 import { TaskCard } from "@/components/TaskCard";
 import { EmptyState } from "@/components/EmptyState";
-import { WatchNudgeBanner } from "@/components/WatchNudgeBanner";
-import { WatchAdoptionCard } from "@/components/WatchAdoptionCard";
+import { NudgeCard } from "@/components/NudgeCard";
 import { isToday, isFuture, isPast, addDays, isBefore } from "date-fns";
 import { Cloud, Watch, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -12,14 +11,14 @@ import { cn } from "@/lib/utils";
 
 interface HomeScreenProps {
   onOpenWatchSetup?: () => void;
+  onOpenSignIn?: () => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpenSignIn }) => {
   const { tasks, user, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
 
-  // Undo-aware complete handler
   const handleComplete = useCallback((id: string) => {
     const task = tasks.find(t => t.id === id);
     completeTask(id);
@@ -38,35 +37,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup }) => {
     });
   }, [tasks, completeTask, uncompleteTask, toast]);
 
-  // Categorize tasks
   const { overdueTasks, todayTasks, upcomingTasks, savedTasks, completedTasks } = useMemo(() => {
     const now = new Date();
     const in7Days = addDays(now, 7);
-
     const incomplete = tasks.filter(t => !t.isCompleted);
     const completed = tasks.filter(t => t.isCompleted);
 
-    const overdue = incomplete.filter(t => {
-      if (t.reminder.type === "specific") {
-        return isPast(t.reminder.date) && !isToday(t.reminder.date);
-      }
-      return false;
-    });
-
-    const today = incomplete.filter(t => {
-      if (t.reminder.type === "anytime") return true;
-      if (t.reminder.type === "specific") return isToday(t.reminder.date);
-      return false;
-    });
-
-    const upcoming = incomplete.filter(t => {
-      if (t.reminder.type === "specific") {
-        const date = t.reminder.date;
-        return isFuture(date) && !isToday(date) && isBefore(date, in7Days);
-      }
-      return false;
-    });
-
+    const overdue = incomplete.filter(t => t.reminder.type === "specific" && isPast(t.reminder.date) && !isToday(t.reminder.date));
+    const today = incomplete.filter(t => t.reminder.type === "anytime" || (t.reminder.type === "specific" && isToday(t.reminder.date)));
+    const upcoming = incomplete.filter(t => t.reminder.type === "specific" && isFuture(t.reminder.date) && !isToday(t.reminder.date) && isBefore(t.reminder.date, in7Days));
     const saved = incomplete.filter(t => t.kind === "note" || t.kind === "draft");
 
     return {
@@ -105,7 +84,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup }) => {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg safe-area-top">
         <div className="flex items-center justify-between px-5 py-3">
           <div>
@@ -134,12 +112,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup }) => {
         <InlineVoiceCapture onCapture={addTask} />
       </header>
 
-      {/* Flow 1: post-first-capture nudge for non-signed-in users */}
-      <WatchNudgeBanner onOpenSetup={onOpenWatchSetup ?? (() => {})} />
-      {/* Flow 2: adoption card for signed-in users without watch after 3+ captures */}
-      <WatchAdoptionCard onOpenSetup={onOpenWatchSetup ?? (() => {})} />
+      {/* Unified nudge card */}
+      <NudgeCard
+        onOpenSignIn={onOpenSignIn ?? (() => {})}
+        onOpenWatchSetup={onOpenWatchSetup ?? (() => {})}
+      />
 
-      {/* Content */}
       <main className="px-5">
         {hasNoActiveTasks && completedTasks.length === 0 ? (
           <EmptyState type="no-tasks" />
@@ -154,20 +132,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup }) => {
           </div>
         )}
 
-        {/* Completed section */}
         {completedTasks.length > 0 && (
           <section className="mt-8">
             <button
               onClick={() => setShowCompleted(!showCompleted)}
               className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 hover:text-foreground transition-colors"
             >
-              <ChevronDown
-                size={14}
-                className={cn(
-                  "transition-transform duration-200",
-                  showCompleted && "rotate-180"
-                )}
-              />
+              <ChevronDown size={14} className={cn("transition-transform duration-200", showCompleted && "rotate-180")} />
               Completed ({completedTasks.length})
             </button>
             {showCompleted && (
