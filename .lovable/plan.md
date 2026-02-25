@@ -1,102 +1,82 @@
 
 
-# Clean, Minimal Task Tiles with Inline Actions
+## Nudge and Activation System Overhaul
 
-## Overview
-Redesign the TaskCard component to include all essential actions directly on the tile without requiring users to tap into a detail dialog. The goal is a clean, minimal design that provides quick access to: play recording, set reminder, delete recording, delete task, and mark done.
-
----
-
-## Design Approach
-
-### Layout Structure
-```text
-+--------------------------------------------------+
-|  [o] Task summary text here...                   |
-|      Today, 2:00 PM                              |
-|                                                  |
-|  [Play] [Calendar] [Delete]              [Done]  |
-+--------------------------------------------------+
-```
-
-**Key Design Decisions:**
-- **Checkbox-style completion** - Circle on the left that fills with checkmark when tapped
-- **Compact action bar** - Small icon buttons at the bottom of the card
-- **No badge clutter** - Remove the "Action/Note/Draft" badges for cleaner look
-- **Inline audio player** - Tapping play shows mini progress bar in place
+This plan aligns the codebase with the PRD's unified nudge system: priority-based, cooldown-aware, single-nudge-at-a-time logic replacing the current dual-component approach.
 
 ---
 
-## Component Changes
+### What Changes
 
-### 1. TaskCard Redesign
-**What changes:**
-- Add a completion circle/checkbox on the left side of the card
-- Add a bottom action row with icon buttons:
-  - **Play/Pause** - Inline audio playback with mini progress bar
-  - **Calendar** - Opens date picker popover to set/update reminder
-  - **Trash** - Delete options (recording only vs full task)
-- Remove the kind badges (Action/Note/Draft) for cleaner look
-- Make the whole card NOT clickable (no dialog needed)
+**1. Unified Nudge State in AppContext**
 
-**Action Icons:**
-- Play icon (if has audio) - toggles to pause with progress
-- Calendar icon - opens date picker popover
-- Trash icon - opens small dropdown (Delete Recording / Delete Task)
-- Checkmark circle - marks task complete
+Replace the current fragmented nudge tracking (`watchNudgeDismissCount`, `watchAdoptionDismissed`, `showSignInPrompt`) with a centralized nudge engine:
 
-### 2. Add Context Methods
-**New method in AppContext:**
-- `updateTaskReminder(id: string, date: Date)` - Set specific reminder date
-- `deleteRecording(id: string)` - Remove audio but keep task
+- Add an `ActivationState` enum: `New_NoCapture`, `Anonymous_Active`, `SignedIn_NoWatch`, `WatchEnabled_Inactive`, `WatchActive`, `Power_User`
+- Track dismiss counts and last-shown timestamps per nudge type (sign-in, watch-setup, watch-usage, power)
+- Add a `isRecording` flag to suppress nudges during capture
+- Implement `getPrimaryNudge()` function with priority: Sign-In > Watch Setup > Watch Usage > Power Features
+- Change sign-in nudge trigger from `captureCount >= 2` to `captureCount >= 3` per PRD
 
-### 3. HomeScreen Cleanup
-- Remove TaskDetailSheet since actions are now inline
-- Simplify the task list rendering
+**2. Replace WatchNudgeBanner + WatchAdoptionCard with Single NudgeCard**
 
----
+Delete both components and create one `NudgeCard` component that renders based on `getPrimaryNudge()`:
 
-## UI/UX Details
+- **Sign-In nudge**: shown when `!signedIn && captures >= 3`, copy: "Save across devices. Sign in to sync and unlock watch capture setup."
+- **Watch Setup nudge**: shown when `signedIn && !watchEnabled`, copy: "Capture without your phone. Set up watch capture."
+- **Watch Usage nudge**: shown when `watchEnabled && watchCaptures < 2`, copy as contextual reminder
+- Only one nudge visible at a time (higher priority suppresses lower)
 
-### Completion Interaction
-- Left side: Empty circle outline
-- Tap to complete: Circle fills with checkmark, card fades slightly
-- Completed tasks get strikethrough text and reduced opacity
+**3. Post-Sign-In Bridge**
 
-### Audio Playback
-- Default: Small play icon button
-- While playing: Progress bar appears below summary, icon becomes pause
-- Simulated 5-second playback
+After a user signs in (from the sign-in nudge specifically), show a bridge screen/sheet: "You're signed in. Want to set up hands-free capture?" with "Set Up Now" and "Later" CTAs. Not shown for organic sign-ins (e.g., from Settings).
 
-### Reminder Date Picker
-- Tap calendar icon opens a Popover with Calendar component
-- Quick options at top: "Tomorrow", "Next Week", "Clear"
-- Full calendar picker below
-- Selected date updates immediately
+- Add `signInSource` tracking to distinguish nudge-triggered vs organic sign-ins
+- Create a `PostSignInBridge` component (small sheet or inline card)
 
-### Delete Actions
-- Tap trash opens DropdownMenu:
-  - "Delete Recording" (if has audio) - keeps task, removes audio indicator
-  - "Delete Task" - removes entire task with brief confirmation
+**4. Cooldown and Suppression Rules**
 
----
+Add timestamp-based cooldown logic to AppContext:
 
-## Technical Implementation
+- Sign-In: 7-day cooldown, 30-day suppression after 2 dismissals
+- Watch Setup: 3-day (72hr) cooldown, 14-day suppression after 2 dismissals
+- Watch Usage: 3-day cooldown, 14-day suppression after ignored
+- Power: 14-day cooldown, permanent after dismissal
 
-### Files to Modify:
-1. **src/components/TaskCard.tsx** - Complete redesign with inline actions
-2. **src/context/AppContext.tsx** - Add `updateTaskReminder` and `deleteRecording` methods
-3. **src/screens/HomeScreen.tsx** - Remove TaskDetailSheet, simplify props
+Since this is a prototype without persistence, cooldowns will use in-memory timestamps (reset on refresh), but the logic structure will be production-ready.
 
-### Dependencies Used:
-- Existing: Popover, DropdownMenu, Calendar, Button components
-- Icons from lucide-react: Play, Pause, Calendar, Trash2, Check, Circle
+**5. Guardrails**
+
+- Add `isRecording` state to context (set true during voice capture, false after)
+- `NudgeCard` returns null when `isRecording` is true
+- No blocking UI -- all nudges remain inline cards, never modals
+
+**6. Settings Watch Status**
+
+Update Settings screen to show four states per PRD:
+- "No watch connected" (not signed in)
+- "Setup required" (signed in, no watch)
+- "Try watch capture" (watch enabled, inactive)
+- "Active" with checkmark (watch active)
 
 ---
 
-## Visual Style
-- Card padding reduced slightly for compactness
-- Action icons are 16-18px, muted color by default, primary on hover
-- Subtle divider or spacing between summary and action row
-- Rounded icon buttons with ghost/subtle background on tap
+### Technical Details
+
+**Files to create:**
+- `src/components/NudgeCard.tsx` -- single unified nudge component
+
+**Files to modify:**
+- `src/context/AppContext.tsx` -- add nudge engine state, `getPrimaryNudge`, cooldown timestamps, `isRecording`, `signInSource`, activation state derivation
+- `src/types/task.ts` -- add `NudgeType`, `ActivationState` types, `watchCaptures` to User
+- `src/screens/HomeScreen.tsx` -- replace `WatchNudgeBanner` + `WatchAdoptionCard` with single `NudgeCard`
+- `src/pages/Index.tsx` -- add post-sign-in bridge logic, pass `signInSource` tracking
+- `src/components/InlineVoiceCapture.tsx` -- set `isRecording` flag during capture
+- `src/screens/SettingsScreen.tsx` -- update watch status to 4-state display
+
+**Files to delete:**
+- `src/components/WatchNudgeBanner.tsx`
+- `src/components/WatchAdoptionCard.tsx`
+
+**No new dependencies required.**
 
