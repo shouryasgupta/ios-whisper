@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MicButton } from "@/components/MicButton";
 import { sampleTranscriptions } from "@/types/task";
 import { useApp } from "@/context/AppContext";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface InlineVoiceCaptureProps {
@@ -97,10 +97,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
       sampleTranscriptions[Math.floor(Math.random() * sampleTranscriptions.length)];
     onCapture(randomText);
 
-    toast({
-      title: "Got it!",
-      description: "You don't need to remember this anymore.",
-    });
+    toast("Got it!", { description: "You don't need to remember this anymore." });
   }, [onCapture]);
 
   const handleCancel = () => {
