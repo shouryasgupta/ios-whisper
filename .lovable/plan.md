@@ -1,10 +1,12 @@
 
-## Refine Sign-In Nudge Copy
 
-Update the sign-in nudge description in `NudgeCard.tsx` to use two balanced sentences instead of the current single sentence with a line break.
+## Remove Line Break from Sign-In Nudge
+
+Remove the `\n` line break from the sign-in nudge description so the two sentences flow naturally as a single paragraph:
 
 **Change in `src/components/NudgeCard.tsx`:**
-- Current: `"Sign in to keep your captures across devices\nand capture hands-free from your watch."`
-- New: `"Keep your captures across devices.\nCapture hands-free from your watch."`
+- Current: `"Keep your captures across devices.\nCapture hands-free from your watch."`
+- New: `"Keep your captures across devices. Capture hands-free from your watch."`
 
-This removes the redundant "Sign in" from the body (since the CTA button already says "Sign in") and creates two clean, balanced benefit statements. The existing `whitespace-pre-line` class will handle the line break naturally.
+The two sentences will wrap naturally based on card width, feeling more like calm body copy rather than a list.
+
