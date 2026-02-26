@@ -97,7 +97,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
       sampleTranscriptions[Math.floor(Math.random() * sampleTranscriptions.length)];
     onCapture(randomText);
 
-    toast("Got it!", { description: "You don't need to remember this anymore." });
+    toast("Saved", { description: "You don't need to remember this.", duration: 2500 });
   }, [onCapture]);
 
   const handleCancel = () => {
@@ -132,13 +132,14 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
     <div className="flex flex-col items-center py-4 animate-fade-in">
       {/* Status text */}
       <p className="text-lg font-medium mb-1">
-        {state === "recording" ? "Listening..." : "Paused"}
+        {state === "recording" ? "Listening" : "Paused"}
       </p>
-      <p className="text-sm text-muted-foreground mb-4">
-        {state === "recording"
-          ? "Speak in your preferred language"
-          : "Tap resume to continue"}
-      </p>
+      {state === "paused" && (
+        <p className="text-sm text-muted-foreground mb-4">
+          Tap resume to continue
+        </p>
+      )}
+      {state === "recording" && <div className="mb-4" />}
 
       {/* Waveform animation — freezes when paused */}
       <div className="flex items-center justify-center gap-1 h-12 mb-4">
@@ -154,11 +155,12 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
 
       {/* Controls row: Cancel + Stop + Pause/Resume */}
       <div className="flex items-center gap-3">
-        {/* Cancel — destructive, discard recording */}
+        {/* Cancel — subtle, not urgent */}
         <div className="flex flex-col items-center gap-1">
           <Button
             onClick={handleCancel}
-            className="w-12 h-12 rounded-full p-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            variant="secondary"
+            className="w-12 h-12 rounded-full p-0"
             aria-label="Cancel and discard recording"
           >
             <Trash2 size={20} />

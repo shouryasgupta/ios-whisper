@@ -35,10 +35,10 @@ const nudgeContent: Record<NudgeType, {
   },
   "watch-usage": {
     icon: <Watch size={16} className="text-primary" />,
-    label: "Try your wrist",
-    title: "Your watch is ready — give it a try",
-    description: "Raise your wrist and tap the Handled complication to capture hands-free.",
-    cta: "Show me how",
+    label: "",
+    title: "Your watch is ready",
+    description: "Next time, just raise your wrist and tap to capture.",
+    cta: "Got it",
     variant: "watch",
   },
   "power": {
