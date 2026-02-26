@@ -27,9 +27,9 @@ const nudgeContent: Record<NudgeType, {
   },
   "watch-setup": {
     icon: <Watch size={16} className="text-primary" />,
-    label: "Level up your capture",
-    title: "Capture without your phone",
-    description: "Add the Handled complication to your Apple Watch and capture from your wrist.",
+    label: "",
+    title: "",
+    description: "Set up your watch for faster, hands-free capture.",
     cta: "Set up Apple Watch",
     variant: "watch",
   },
@@ -92,10 +92,10 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
           </button>
         </div>
 
-        {(primaryNudge === "watch-setup" && captureCount >= 3) ? (
-          <h3 className="font-semibold text-base mb-1 leading-snug">
-            {`You've captured ${captureCount} things — try your wrist next`}
-          </h3>
+        {primaryNudge === "watch-setup" ? (
+          <p className="text-sm text-muted-foreground mb-1 leading-relaxed">
+            {`You've captured ${captureCount} thing${captureCount !== 1 ? 's' : ''}.`}
+          </p>
         ) : content.title ? (
           <h3 className="font-semibold text-base mb-1 leading-snug">
             {content.title}
@@ -105,24 +105,13 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
           {content.description}
         </p>
 
-        {primaryNudge !== "watch-usage" && primaryNudge !== "sign-in" && (
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary px-2.5 py-1.5 rounded-full">
-              <Zap size={11} className="text-primary" />
-              <span>Faster than phone</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary px-2.5 py-1.5 rounded-full">
-              <Watch size={11} className="text-primary" />
-              <span>Works offline</span>
-            </div>
-          </div>
-        )}
+        
 
         <Button onClick={handleCta} className="w-full h-10 rounded-xl text-sm">
           {content.cta}
         </Button>
 
-        {primaryNudge === "sign-in" && (
+        {(primaryNudge === "sign-in" || primaryNudge === "watch-setup") && (
           <button
             onClick={() => dismissNudge(primaryNudge)}
             className="w-full py-2 mt-1 text-sm text-muted-foreground font-medium"
