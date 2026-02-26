@@ -21,7 +21,7 @@ const nudgeContent: Record<NudgeType, {
     icon: <LogIn size={16} className="text-primary" />,
     label: "",
     title: "",
-    description: "Sign in to keep your captures across devices and capture hands-free from your watch.",
+    description: "Sign in to keep your captures across devices\nand capture hands-free from your watch.",
     cta: "Sign in",
     variant: "sign-in",
   },
@@ -68,7 +68,7 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
 
   return (
     <div className="mx-5 mt-4 mb-1 bg-card border rounded-2xl overflow-hidden animate-fade-in">
-      <div className="h-1 bg-primary w-full" />
+      <div className="h-0.5 bg-primary/60 w-full" />
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           {content.label ? (
@@ -101,7 +101,7 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
             {content.title}
           </h3>
         ) : null}
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-muted-foreground mb-4 whitespace-pre-line leading-relaxed">
           {content.description}
         </p>
 
