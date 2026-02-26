@@ -21,7 +21,7 @@ const nudgeContent: Record<NudgeType, {
     icon: <LogIn size={16} className="text-primary" />,
     label: "",
     title: "",
-    description: "Keep your captures across devices and capture hands-free from your watch.",
+    description: "Keep your captures across devices.\nCapture hands-free from your watch.",
     cta: "Sign in",
     variant: "sign-in",
   },
