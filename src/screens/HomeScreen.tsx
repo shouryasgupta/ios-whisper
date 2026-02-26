@@ -15,7 +15,7 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpenSignIn }) => {
-  const { tasks, user, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
+  const { tasks, user, isRecording, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -119,7 +119,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
       />
 
       <main className="px-5">
-        {hasNoActiveTasks && completedTasks.length === 0 ? (
+        {hasNoActiveTasks && completedTasks.length === 0 && !isRecording ? (
           <EmptyState type="no-tasks" />
         ) : hasNoActiveTasks && completedTasks.length > 0 ? (
           <EmptyState type="all-done" />
