@@ -19,9 +19,9 @@ const nudgeContent: Record<NudgeType, {
 }> = {
   "sign-in": {
     icon: <LogIn size={16} className="text-primary" />,
-    label: "Unlock sync",
+    label: "",
     title: "Save across devices",
-    description: "Sign in to sync your captures and unlock hands-free watch capture.",
+    description: "Sign in to keep your captures safe across devices and set up watch capture.",
     cta: "Sign in",
     variant: "sign-in",
   },
@@ -71,14 +71,18 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
       <div className="h-1 bg-primary w-full" />
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              {content.icon}
+          {content.label ? (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                {content.icon}
+              </div>
+              <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                {content.label}
+              </span>
             </div>
-            <span className="text-xs font-semibold text-primary uppercase tracking-wide">
-              {content.label}
-            </span>
-          </div>
+          ) : (
+            <div />
+          )}
           <button
             onClick={() => dismissNudge(primaryNudge)}
             className="text-muted-foreground hover:text-foreground transition-colors p-0.5 -mr-1 -mt-1"
@@ -97,15 +101,15 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
           {content.description}
         </p>
 
-        {primaryNudge !== "watch-usage" && (
+        {primaryNudge !== "watch-usage" && primaryNudge !== "sign-in" && (
           <div className="flex items-center gap-2 mb-4">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary px-2.5 py-1.5 rounded-full">
               <Zap size={11} className="text-primary" />
-              <span>{primaryNudge === "sign-in" ? "Sync everywhere" : "Faster than phone"}</span>
+              <span>Faster than phone</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary px-2.5 py-1.5 rounded-full">
               <Watch size={11} className="text-primary" />
-              <span>{primaryNudge === "sign-in" ? "Unlock Watch" : "Works offline"}</span>
+              <span>Works offline</span>
             </div>
           </div>
         )}
@@ -113,6 +117,15 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
         <Button onClick={handleCta} className="w-full h-10 rounded-xl text-sm">
           {content.cta}
         </Button>
+
+        {primaryNudge === "sign-in" && (
+          <button
+            onClick={() => dismissNudge(primaryNudge)}
+            className="w-full py-2 mt-1 text-sm text-muted-foreground font-medium"
+          >
+            Not now
+          </button>
+        )}
       </div>
     </div>
   );
