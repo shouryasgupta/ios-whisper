@@ -20,8 +20,8 @@ const nudgeContent: Record<NudgeType, {
   "sign-in": {
     icon: <LogIn size={16} className="text-primary" />,
     label: "",
-    title: "Save across devices",
-    description: "Sign in to keep your captures safe across devices and set up watch capture.",
+    title: "",
+    description: "Sign in to keep your captures across devices and capture hands-free from your watch.",
     cta: "Sign in",
     variant: "sign-in",
   },
@@ -92,11 +92,15 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
           </button>
         </div>
 
-        <h3 className="font-semibold text-base mb-1 leading-snug">
-          {primaryNudge === "watch-setup" && captureCount >= 3
-            ? `You've captured ${captureCount} things — try your wrist next`
-            : content.title}
-        </h3>
+        {(primaryNudge === "watch-setup" && captureCount >= 3) ? (
+          <h3 className="font-semibold text-base mb-1 leading-snug">
+            {`You've captured ${captureCount} things — try your wrist next`}
+          </h3>
+        ) : content.title ? (
+          <h3 className="font-semibold text-base mb-1 leading-snug">
+            {content.title}
+          </h3>
+        ) : null}
         <p className="text-sm text-muted-foreground mb-4">
           {content.description}
         </p>
