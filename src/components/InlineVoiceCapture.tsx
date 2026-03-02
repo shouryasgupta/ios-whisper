@@ -152,7 +152,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
       <div className="flex flex-col items-center py-4 animate-fade-in px-1">
         <Textarea
           autoFocus
-          placeholder="What do you need to remember?"
+          placeholder="What's on your mind?"
           value={typedText}
           onChange={e => setTypedText(e.target.value)}
           className="min-h-[80px] resize-none text-sm"
