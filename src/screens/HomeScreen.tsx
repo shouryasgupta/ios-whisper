@@ -110,11 +110,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
           )}
         </div>
         <InlineVoiceCapture onCapture={addTask} />
-        <NudgeCard
-          onOpenSignIn={onOpenSignIn ?? (() => {})}
-          onOpenWatchSetup={onOpenWatchSetup ?? (() => {})}
-        />
       </header>
+
+      {/* Unified nudge card */}
+      <NudgeCard
+        onOpenSignIn={onOpenSignIn ?? (() => {})}
+        onOpenWatchSetup={onOpenWatchSetup ?? (() => {})}
+      />
 
       <main className="px-5">
         {hasNoActiveTasks && completedTasks.length === 0 && !isRecording ? (
