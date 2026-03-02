@@ -112,24 +112,36 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
         <InlineVoiceCapture onCapture={addTask} />
       </header>
 
-      {/* Unified nudge card */}
-      <NudgeCard
-        onOpenSignIn={onOpenSignIn ?? (() => {})}
-        onOpenWatchSetup={onOpenWatchSetup ?? (() => {})}
-      />
-
       <main className="px-5">
         {hasNoActiveTasks && completedTasks.length === 0 && !isRecording ? (
-          <EmptyState type="no-tasks" />
+          <>
+            <EmptyState type="no-tasks" />
+            <NudgeCard
+              onOpenSignIn={onOpenSignIn ?? (() => {})}
+              onOpenWatchSetup={onOpenWatchSetup ?? (() => {})}
+            />
+          </>
         ) : hasNoActiveTasks && completedTasks.length > 0 ? (
-          <EmptyState type="all-done" />
+          <>
+            <EmptyState type="all-done" />
+            <NudgeCard
+              onOpenSignIn={onOpenSignIn ?? (() => {})}
+              onOpenWatchSetup={onOpenWatchSetup ?? (() => {})}
+            />
+          </>
         ) : (
-          <div className="space-y-6">
-            {overdueTasks.length > 0 && renderSection("Overdue", overdueTasks, true)}
-            {todayTasks.length > 0 && renderSection("Today", todayTasks)}
-            {upcomingTasks.length > 0 && renderSection("Upcoming", upcomingTasks)}
-            {savedTasks.length > 0 && renderSection("Saved", savedTasks)}
-          </div>
+          <>
+            <NudgeCard
+              onOpenSignIn={onOpenSignIn ?? (() => {})}
+              onOpenWatchSetup={onOpenWatchSetup ?? (() => {})}
+            />
+            <div className="space-y-6">
+              {overdueTasks.length > 0 && renderSection("Overdue", overdueTasks, true)}
+              {todayTasks.length > 0 && renderSection("Today", todayTasks)}
+              {upcomingTasks.length > 0 && renderSection("Upcoming", upcomingTasks)}
+              {savedTasks.length > 0 && renderSection("Saved", savedTasks)}
+            </div>
+          </>
         )}
 
         {completedTasks.length > 0 && (
