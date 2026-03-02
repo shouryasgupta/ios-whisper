@@ -1,5 +1,5 @@
 import React from "react";
-import { Watch, LogIn, X } from "lucide-react";
+import { Watch, LogIn, Zap, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { NudgeType } from "@/types/task";
@@ -39,6 +39,14 @@ const nudgeContent: Record<NudgeType, {
     title: "Your watch is ready",
     description: "Next time, just raise your wrist and tap to capture.",
     cta: "Got it",
+    variant: "watch",
+  },
+  "power": {
+    icon: <Zap size={16} className="text-primary" />,
+    label: "Power feature",
+    title: "You're a pro",
+    description: "Explore advanced features to get even more done.",
+    cta: "Learn more",
     variant: "watch",
   },
 };
