@@ -119,19 +119,20 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
     return (
       <div className="flex flex-col items-center py-4 relative">
         <MicButton onClick={handleStartRecording} size="large" />
+        {/* Type instead pill */}
+        <button
+          onClick={() => { setState("typing"); setTypedText(""); }}
+          className="flex items-center gap-1.5 bg-secondary/60 text-muted-foreground text-[11px] px-3 py-1 rounded-full hover:bg-secondary hover:text-foreground transition-colors mt-3"
+        >
+          <Keyboard size={13} />
+          <span>Type instead</span>
+        </button>
         {/* Revolving suggestion text */}
-        <p className="text-sm text-muted-foreground mt-3 h-5 overflow-hidden">
+        <p className="text-sm text-muted-foreground mt-2 h-5 overflow-hidden">
           <span key={suggestionIndex} className="inline-block animate-fade-in">
             "{suggestions[suggestionIndex]}"
           </span>
         </p>
-        <button
-          onClick={() => { setState("typing"); setTypedText(""); }}
-          className="flex items-center gap-1.5 bg-secondary/60 text-muted-foreground text-[11px] px-3 py-1 rounded-full hover:bg-secondary hover:text-foreground transition-colors mt-2"
-        >
-          <Keyboard size={13} />
-          <span>Type</span>
-        </button>
       </div>
     );
   }
