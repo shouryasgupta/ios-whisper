@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Trash2, Check, Pause, Play } from "lucide-react";
+import { Trash2, Check, Pause, Play, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { MicButton } from "@/components/MicButton";
 import { sampleTranscriptions } from "@/types/task";
 import { useApp } from "@/context/AppContext";
@@ -8,10 +9,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface InlineVoiceCaptureProps {
-  onCapture: (text: string) => void;
+  onCapture: (text: string, hasAudio?: boolean) => void;
 }
 
-type RecordingState = "idle" | "recording" | "paused";
+type CaptureState = "idle" | "recording" | "paused" | "typing";
 
 const suggestions = [
   "Buy diapers tomorrow",
@@ -37,7 +38,8 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   onCapture,
 }) => {
   const { setIsRecording } = useApp();
-  const [state, setState] = useState<RecordingState>("idle");
+  const [state, setState] = useState<CaptureState>("idle");
+  const [typedText, setTypedText] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -95,7 +97,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
 
     const randomText =
       sampleTranscriptions[Math.floor(Math.random() * sampleTranscriptions.length)];
-    onCapture(randomText);
+    onCapture(randomText, true);
 
     toast("Saved", { description: "You don't need to remember this.", duration: 2500 });
   }, [onCapture]);
@@ -123,6 +125,59 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
             "{suggestions[suggestionIndex]}"
           </span>
         </p>
+        <button
+          onClick={() => { setState("typing"); setTypedText(""); }}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors mt-2"
+        >
+          <Keyboard size={14} />
+          <span>or type it</span>
+        </button>
+      </div>
+    );
+  }
+
+  // ─── Typing state ───
+  if (state === "typing") {
+    const handleSaveTyped = () => {
+      const text = typedText.trim();
+      if (!text) return;
+      onCapture(text, false);
+      setState("idle");
+      setTypedText("");
+      toast("Saved", { description: "You don't need to remember this.", duration: 2500 });
+    };
+
+    return (
+      <div className="flex flex-col items-center py-4 animate-fade-in px-1">
+        <Textarea
+          autoFocus
+          placeholder="What do you need to remember?"
+          value={typedText}
+          onChange={e => setTypedText(e.target.value)}
+          className="min-h-[80px] resize-none text-sm"
+          onKeyDown={e => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSaveTyped();
+            }
+          }}
+        />
+        <div className="flex items-center justify-between w-full mt-3">
+          <button
+            onClick={() => { setState("idle"); setTypedText(""); }}
+            className="text-sm text-muted-foreground font-medium"
+          >
+            Cancel
+          </button>
+          <Button
+            onClick={handleSaveTyped}
+            disabled={!typedText.trim()}
+            size="sm"
+            className="rounded-xl px-6"
+          >
+            Save
+          </Button>
+        </div>
       </div>
     );
   }

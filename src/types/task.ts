@@ -69,7 +69,7 @@ export const sampleTranscriptions = [
   "Remind me to pay the electricity bill by the 15th",
 ];
 
-export const generateMockTask = (text: string): Task => {
+export const generateMockTask = (text: string, hasAudio: boolean = true): Task => {
   const isBuyIntent = text.toLowerCase().includes("buy") || text.toLowerCase().includes("order");
   const hasTime = text.toLowerCase().includes("tomorrow") || 
                   text.toLowerCase().includes("am") || 
@@ -92,7 +92,7 @@ export const generateMockTask = (text: string): Task => {
     fullText: text,
     kind: "action",
     reminder,
-    hasAudio: true,
+    hasAudio,
     hasChecklist: text.includes(" - ") || text.includes(","),
     checklistItems: text.includes(",") ? text.split(" - ").pop()?.split(",").map(s => s.trim()) : undefined,
     isBuyIntent,
