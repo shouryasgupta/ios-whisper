@@ -1,12 +1,15 @@
 
 
-## Remove Line Break from Sign-In Nudge
+## Remove X Dismiss Button from Sign-In and Watch-Setup Nudges
 
-Remove the `\n` line break from the sign-in nudge description so the two sentences flow naturally as a single paragraph:
+The sign-in and watch-setup nudges already have a "Not now" button that dismisses them, making the X button in the top-right redundant. Removing it will declutter the card and reinforce the calm, minimal tone.
 
 **Change in `src/components/NudgeCard.tsx`:**
-- Current: `"Keep your captures across devices.\nCapture hands-free from your watch."`
-- New: `"Keep your captures across devices. Capture hands-free from your watch."`
 
-The two sentences will wrap naturally based on card width, feeling more like calm body copy rather than a list.
+- Hide the X dismiss button when the nudge is `sign-in` or `watch-setup` (since those already show "Not now")
+- Keep the X button for other nudge types (`watch-usage`, `power`) that don't have a "Not now" option
+- Remove the now-unnecessary header row (`flex justify-between` wrapper) for those nudges, since there's no label or X to display -- this eliminates the empty space at the top of the card
+- The top accent line and padding remain intact
+
+The result: the sign-in and watch-setup cards will just show description text, the CTA button, and "Not now" -- nothing else. Clean and confident.
 
