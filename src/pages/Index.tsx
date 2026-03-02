@@ -18,6 +18,7 @@ const AppContent: React.FC = () => {
     snoozeTask,
     showPostSignInBridge,
     dismissPostSignInBridge,
+    dismissNudge,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<TabType>("home");
@@ -89,6 +90,11 @@ const AppContent: React.FC = () => {
     setTimeout(() => setShowWatchSetup(true), 300);
   };
 
+  const handleBridgeLater = () => {
+    dismissPostSignInBridge();
+    dismissNudge("watch-setup");
+  };
+
   const handleReminderDone = () => {
     if (reminderTask) {
       completeTask(reminderTask.id);
@@ -133,7 +139,7 @@ const AppContent: React.FC = () => {
       <PostSignInBridge
         open={showPostSignInBridge}
         onSetupWatch={handleBridgeSetup}
-        onLater={dismissPostSignInBridge}
+        onLater={handleBridgeLater}
       />
 
       {/* Sign-in modal */}
