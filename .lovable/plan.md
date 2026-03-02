@@ -1,14 +1,27 @@
 
 
-## Replace keyboard icon with a subtle "Type" pill
+## Fix typing mode layout
 
-### Change
+### Problem
+The textarea is centered with side padding (`px-1`, `items-center`), but Cancel and Save are spread to the edges with `justify-between`, creating a mismatched, awkward feel.
 
-**`src/components/InlineVoiceCapture.tsx`** - In the idle state, replace the bare `<Keyboard size={14} />` button with a small rounded pill/chip that contains the keyboard icon and the word "Type". Styling: `bg-secondary/60 text-muted-foreground text-[11px] px-3 py-1 rounded-full` with the existing hover transition. This gives it a recognizable shape and label without competing with the mic button.
+### Solution
+Tighten the layout so the textarea and action row feel like a cohesive unit:
+
+1. Remove `items-center` from the typing container -- let children stretch to full width naturally
+2. Right-align the actions: place Cancel as a ghost text button and Save as a small pill, both on the right side in a row with `gap-3` and `justify-end`
+3. Add consistent horizontal padding (`px-4`) to match the rest of the header area
+
+The result is a compact, messenger-style input block:
 
 ```text
-      [ Mic Button ]
-  "Buy diapers tomorrow"
-     [ icon  Type ]        <-- subtle pill
++------------------------------------+
+| What's on your mind?               |
+|                                    |
++------------------------------------+
+                     Cancel    [Save]
 ```
+
+### File changed
+**`src/components/InlineVoiceCapture.tsx`** -- typing state return block (lines 151-183): update container classes and action row alignment.
 
