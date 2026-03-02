@@ -114,70 +114,84 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // ─── Idle state ───
-  if (state === "idle") {
+  const isTyping = state === "typing";
+  const isIdleOrTyping = state === "idle" || isTyping;
+
+  const handleSaveTyped = () => {
+    const text = typedText.trim();
+    if (!text) return;
+    onCapture(text, false);
+    setState("idle");
+    setTypedText("");
+    toast("Saved", { description: "You don't need to remember this.", duration: 2500 });
+  };
+
+  // ─── Idle / Typing shared block (morph transition) ───
+  if (isIdleOrTyping) {
     return (
-      <div className="flex flex-col items-center py-4 relative">
-        <MicButton onClick={handleStartRecording} size="large" />
-        {/* Type instead pill */}
-        <button
-          onClick={() => { setState("typing"); setTypedText(""); }}
-          className="flex items-center gap-1.5 bg-secondary/60 text-muted-foreground text-[11px] px-3 py-1 rounded-full hover:bg-secondary hover:text-foreground transition-colors mt-3"
+      <div className="flex flex-col items-center py-4 relative px-4">
+        {/* Mic + suggestions — scale out when typing */}
+        <div
+          className={cn(
+            "flex flex-col items-center transition-all duration-300 ease-out origin-center",
+            isTyping
+              ? "scale-0 opacity-0 h-0 pointer-events-none"
+              : "scale-100 opacity-100"
+          )}
         >
-          <Keyboard size={13} />
-          <span>Type instead</span>
-        </button>
-        {/* Revolving suggestion text */}
-        <p className="text-sm text-muted-foreground mt-2 h-5 overflow-hidden">
-          <span key={suggestionIndex} className="inline-block animate-fade-in">
-            "{suggestions[suggestionIndex]}"
-          </span>
-        </p>
-      </div>
-    );
-  }
-
-  // ─── Typing state ───
-  if (state === "typing") {
-    const handleSaveTyped = () => {
-      const text = typedText.trim();
-      if (!text) return;
-      onCapture(text, false);
-      setState("idle");
-      setTypedText("");
-      toast("Saved", { description: "You don't need to remember this.", duration: 2500 });
-    };
-
-    return (
-      <div className="flex flex-col py-4 animate-fade-in px-4">
-        <Textarea
-          autoFocus
-          placeholder="What's on your mind?"
-          value={typedText}
-          onChange={e => setTypedText(e.target.value)}
-          className="min-h-[80px] resize-none text-sm"
-          onKeyDown={e => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSaveTyped();
-            }
-          }}
-        />
-        <div className="flex items-center justify-end gap-3 mt-3">
+          <MicButton onClick={handleStartRecording} size="large" />
           <button
-            onClick={() => { setState("idle"); setTypedText(""); }}
-            className="text-sm text-muted-foreground font-medium"
+            onClick={() => { setState("typing"); setTypedText(""); }}
+            className="flex items-center gap-1.5 bg-secondary/60 text-muted-foreground text-[11px] px-3 py-1 rounded-full hover:bg-secondary hover:text-foreground transition-colors mt-3"
           >
-            Cancel
+            <Keyboard size={13} />
+            <span>Type instead</span>
           </button>
-          <Button
-            onClick={handleSaveTyped}
-            disabled={!typedText.trim()}
-            size="sm"
-            className="rounded-xl px-6"
-          >
-            Save
-          </Button>
+          <p className="text-sm text-muted-foreground mt-2 h-5 overflow-hidden">
+            <span key={suggestionIndex} className="inline-block animate-fade-in">
+              "{suggestions[suggestionIndex]}"
+            </span>
+          </p>
+        </div>
+
+        {/* Textarea — expand in when typing */}
+        <div
+          className={cn(
+            "w-full transition-all duration-300 ease-out overflow-hidden",
+            isTyping
+              ? "max-h-[160px] opacity-100 mt-0"
+              : "max-h-0 opacity-0"
+          )}
+        >
+          <Textarea
+            autoFocus={isTyping}
+            placeholder="What's on your mind?"
+            value={typedText}
+            onChange={e => setTypedText(e.target.value)}
+            className="min-h-[80px] resize-none text-sm"
+            onKeyDown={e => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSaveTyped();
+              }
+            }}
+          />
+          <div className="flex items-center justify-end gap-3 mt-3">
+            <button
+              onClick={() => { setState("idle"); setTypedText(""); }}
+              className="text-sm text-muted-foreground font-medium"
+            >
+              Cancel
+            </button>
+            <Button
+              onClick={handleSaveTyped}
+              disabled={!typedText.trim()}
+              size="sm"
+              className="rounded-xl px-6"
+            >
+              Save
+            </Button>
+          </div>
         </div>
       </div>
     );
