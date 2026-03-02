@@ -1,6 +1,6 @@
 export type TaskKind = "action" | "note" | "draft";
 
-export type NudgeType = "sign-in" | "watch-setup" | "watch-usage" | "power";
+export type NudgeType = "sign-in" | "watch-setup" | "watch-usage";
 
 export type ActivationState =
   | "new_no_capture"
