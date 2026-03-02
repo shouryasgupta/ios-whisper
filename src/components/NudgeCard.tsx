@@ -92,11 +92,7 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
           </button>
         </div>
 
-        {primaryNudge === "watch-setup" ? (
-          <p className="text-sm text-muted-foreground mb-1 leading-relaxed">
-            {`You've captured ${captureCount} thing${captureCount !== 1 ? 's' : ''}.`}
-          </p>
-        ) : content.title ? (
+        {content.title ? (
           <h3 className="font-semibold text-base mb-1 leading-snug">
             {content.title}
           </h3>
