@@ -127,9 +127,10 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
         </p>
         <button
           onClick={() => { setState("typing"); setTypedText(""); }}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors mt-2"
+          className="flex items-center gap-1.5 bg-secondary/60 text-muted-foreground text-[11px] px-3 py-1 rounded-full hover:bg-secondary hover:text-foreground transition-colors mt-2"
         >
-          <Keyboard size={14} />
+          <Keyboard size={13} />
+          <span>Type</span>
         </button>
       </div>
     );
