@@ -130,7 +130,6 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
           className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors mt-2"
         >
           <Keyboard size={14} />
-          <span>or type it</span>
         </button>
       </div>
     );
