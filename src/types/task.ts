@@ -44,6 +44,7 @@ export interface User {
   avatarUrl?: string;
   isSignedIn: boolean;
   watchCaptureEnabled: boolean;
+  watchEnabledAt: number | null;
   watchCaptures: number;
 }
 

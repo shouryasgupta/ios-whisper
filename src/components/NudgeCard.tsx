@@ -62,30 +62,6 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
     <div className="mx-5 mt-4 mb-1 bg-card border rounded-2xl overflow-hidden animate-fade-in">
       <div className="h-0.5 bg-primary/60 w-full" />
       <div className="p-4">
-        {primaryNudge !== "sign-in" && primaryNudge !== "watch-setup" && (
-          <div className="flex items-start justify-between mb-3">
-            {content.label ? (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  {content.icon}
-                </div>
-                <span className="text-xs font-semibold text-primary uppercase tracking-wide">
-                  {content.label}
-                </span>
-              </div>
-            ) : (
-              <div />
-            )}
-            <button
-              onClick={() => dismissNudge(primaryNudge)}
-              className="text-muted-foreground hover:text-foreground transition-colors p-0.5 -mr-1 -mt-1"
-              aria-label="Dismiss"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
-
         {content.title ? (
           <h3 className="font-semibold text-base mb-1 leading-snug">
             {content.title}
@@ -95,20 +71,16 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
           {content.description}
         </p>
 
-        
-
         <Button onClick={handleCta} className="w-full h-10 rounded-xl text-sm">
           {content.cta}
         </Button>
 
-        {(primaryNudge === "sign-in" || primaryNudge === "watch-setup") && (
-          <button
-            onClick={() => dismissNudge(primaryNudge)}
-            className="w-full py-2 mt-1 text-sm text-muted-foreground font-medium"
-          >
-            Not now
-          </button>
-        )}
+        <button
+          onClick={() => dismissNudge(primaryNudge)}
+          className="w-full py-2 mt-1 text-sm text-muted-foreground font-medium"
+        >
+          Not now
+        </button>
       </div>
     </div>
   );

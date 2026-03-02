@@ -99,8 +99,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return "watch-setup";
     }
 
-    // Watch Usage: watch enabled but < 2 watch captures
-    if (user && user.watchCaptureEnabled && user.watchCaptures < 2 && !isNudgeSuppressed("watch-usage")) {
+    // Watch Usage: watch enabled 48+ hours ago, phone captures but no watch captures
+    if (
+      user &&
+      user.watchCaptureEnabled &&
+      user.watchEnabledAt &&
+      Date.now() - user.watchEnabledAt >= 48 * 60 * 60 * 1000 &&
+      captureCount > 0 &&
+      user.watchCaptures === 0 &&
+      !isNudgeSuppressed("watch-usage")
+    ) {
       return "watch-usage";
     }
 
@@ -119,7 +127,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const enableWatchCapture = useCallback(() => {
-    setUser(prev => prev ? { ...prev, watchCaptureEnabled: true } : prev);
+    setUser(prev => prev ? { ...prev, watchCaptureEnabled: true, watchEnabledAt: Date.now() } : prev);
   }, []);
 
   const addTask = useCallback((text: string) => {
@@ -182,6 +190,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       email: provider === "apple" ? "jane@icloud.com" : "jane@gmail.com",
       isSignedIn: true,
       watchCaptureEnabled: false,
+      watchEnabledAt: null,
       watchCaptures: 0,
     });
     if (source === "nudge") {
