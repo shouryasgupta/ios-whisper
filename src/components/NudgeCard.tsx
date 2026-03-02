@@ -59,7 +59,7 @@ export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchS
   };
 
   return (
-    <div className="mx-5 mt-4 mb-1 bg-card border rounded-2xl overflow-hidden animate-fade-in">
+    <div className="mt-4 mb-4 bg-card border rounded-2xl overflow-hidden animate-fade-in">
       <div className="h-0.5 bg-primary/60 w-full" />
       <div className="p-4">
         {primaryNudge !== "sign-in" && primaryNudge !== "watch-setup" && (
