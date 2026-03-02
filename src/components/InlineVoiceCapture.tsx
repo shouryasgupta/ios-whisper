@@ -149,7 +149,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
     };
 
     return (
-      <div className="flex flex-col items-center py-4 animate-fade-in px-1">
+      <div className="flex flex-col py-4 animate-fade-in px-4">
         <Textarea
           autoFocus
           placeholder="What's on your mind?"
@@ -163,7 +163,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
             }
           }}
         />
-        <div className="flex items-center justify-between w-full mt-3">
+        <div className="flex items-center justify-end gap-3 mt-3">
           <button
             onClick={() => { setState("idle"); setTypedText(""); }}
             className="text-sm text-muted-foreground font-medium"
