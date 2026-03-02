@@ -1,27 +1,49 @@
 
 
-## Fix typing mode layout
+## Mic-to-textfield morph transition
 
-### Problem
-The textarea is centered with side padding (`px-1`, `items-center`), but Cancel and Save are spread to the edges with `justify-between`, creating a mismatched, awkward feel.
+### Concept
+Instead of an abrupt swap between idle and typing states, the mic button visually transforms into the textarea. This creates psychological continuity -- the user tapped the mic area and it "opened up" into a text field.
 
-### Solution
-Tighten the layout so the textarea and action row feel like a cohesive unit:
+### How it works
 
-1. Remove `items-center` from the typing container -- let children stretch to full width naturally
-2. Right-align the actions: place Cancel as a ghost text button and Save as a small pill, both on the right side in a row with `gap-3` and `justify-end`
-3. Add consistent horizontal padding (`px-4`) to match the rest of the header area
+Rather than conditionally rendering completely separate trees for idle vs typing, we render **both** in a single layout and use CSS transitions to morph between them:
 
-The result is a compact, messenger-style input block:
+1. **Shared container** with a fixed position stays mounted across states. Use `overflow-hidden` and animate `max-height` / `opacity` to smoothly expand.
+
+2. **Mic circle shrinks and fades**: When entering typing mode, the mic button scales down (`scale-0 opacity-0`) with a 250ms ease-out transition.
+
+3. **Textarea expands from the mic's position**: The textarea starts collapsed (`max-height: 0, opacity: 0`) and smoothly grows to full size (`max-height: 120px, opacity: 1`) over 300ms, creating the illusion the circle opened into a rectangle.
+
+4. **Reverse on cancel**: When the user taps Cancel, the textarea collapses back down and the mic fades back in.
+
+5. **Suggestion text and "Type instead" pill** fade out simultaneously with the mic shrink.
+
+### Implementation
+
+**`src/components/InlineVoiceCapture.tsx`**:
+- Stop using early returns for idle vs typing. Instead, render a single wrapper that contains both the mic elements and the textarea elements, toggling visibility via CSS classes driven by `state`.
+- Mic button and surrounding elements get: `transition-all duration-300` with conditional `scale-0 opacity-0 h-0` when `state === "typing"`.
+- Textarea block gets: `transition-all duration-300 ease-out` with conditional `max-h-0 opacity-0 overflow-hidden` when idle, expanding to `max-h-[160px] opacity-100` when typing.
+- The Cancel/Save row follows the textarea with the same opacity transition.
+
+**`src/index.css`** (if needed):
+- Add a small keyframe or transition utility if Tailwind's built-in transitions aren't sufficient, but the plan favors pure Tailwind classes to keep things simple.
+
+### Visual sequence
 
 ```text
-+------------------------------------+
-| What's on your mind?               |
-|                                    |
-+------------------------------------+
-                     Cancel    [Save]
+IDLE:                          TYPING (after 300ms):
+                               
+   ( Mic )     --scale down-->    (gone)
+  [Type instead] --fade out-->    (gone)
+  "suggestion"   --fade out-->    (gone)
+                               +---------------------------+
+               --expand up-->  | What's on your mind?      |
+                               |                           |
+                               +---------------------------+
+                                          Cancel    [Save]
 ```
 
-### File changed
-**`src/components/InlineVoiceCapture.tsx`** -- typing state return block (lines 151-183): update container classes and action row alignment.
-
+### Files changed
+- **`src/components/InlineVoiceCapture.tsx`** -- Merge idle and typing returns into one block with CSS-driven morph transitions.
