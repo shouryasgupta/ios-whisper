@@ -6,7 +6,7 @@ const NUDGE_CONFIG: Record<NudgeType, { cooldownMs: number; suppressionMs: numbe
   "sign-in":    { cooldownMs: 7 * 24 * 60 * 60 * 1000, suppressionMs: 30 * 24 * 60 * 60 * 1000, maxDismissals: 2 },
   "watch-setup":{ cooldownMs: 3 * 24 * 60 * 60 * 1000, suppressionMs: 14 * 24 * 60 * 60 * 1000, maxDismissals: 2 },
   "watch-usage":{ cooldownMs: 3 * 24 * 60 * 60 * 1000, suppressionMs: 14 * 24 * 60 * 60 * 1000, maxDismissals: 1 },
-  "power":      { cooldownMs: 14 * 24 * 60 * 60 * 1000, suppressionMs: Infinity, maxDismissals: 1 },
+  
 };
 
 const defaultDismissState = (): NudgeDismissState => ({ dismissCount: 0, lastDismissedAt: null, lastShownAt: null });
@@ -52,7 +52,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     "sign-in": defaultDismissState(),
     "watch-setup": defaultDismissState(),
     "watch-usage": defaultDismissState(),
-    "power": defaultDismissState(),
+    
   });
 
   // Derive activation state
