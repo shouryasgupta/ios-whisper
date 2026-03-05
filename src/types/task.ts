@@ -35,6 +35,7 @@ export interface Task {
   createdAt: Date;
   completedAt?: Date;
   isCompleted: boolean;
+  captureGroupId?: string;
 }
 
 export interface User {
@@ -69,7 +70,7 @@ export const sampleTranscriptions = [
   "Remind me to pay the electricity bill by the 15th",
 ];
 
-export const generateMockTask = (text: string, hasAudio: boolean = true): Task => {
+export const generateMockTask = (text: string, hasAudio: boolean = true, captureGroupId?: string): Task => {
   const isBuyIntent = text.toLowerCase().includes("buy") || text.toLowerCase().includes("order");
   const hasTime = text.toLowerCase().includes("tomorrow") || 
                   text.toLowerCase().includes("am") || 
@@ -99,5 +100,6 @@ export const generateMockTask = (text: string, hasAudio: boolean = true): Task =
     buyLink: isBuyIntent ? `https://www.amazon.com/s?k=${encodeURIComponent(text.split("buy ")[1] || text)}` : undefined,
     createdAt: now,
     isCompleted: false,
+    captureGroupId,
   };
 };

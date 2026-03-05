@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Play, Pause, CalendarIcon, Trash2, Circle, Volume2, CheckCircle2, Clock } from "lucide-react";
+import { Play, Pause, CalendarIcon, Trash2, Circle, Volume2, CheckCircle2, Clock, Layers } from "lucide-react";
 import { Task } from "@/types/task";
 import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, addDays } from "date-fns";
@@ -20,6 +20,7 @@ import {
 
 interface TaskCardProps {
   task: Task;
+  siblingTasks?: Task[];
   onComplete: (id: string) => void;
   onUncomplete?: (id: string) => void;
   onDelete: (id: string) => void;
@@ -43,6 +44,7 @@ const formatReminder = (reminder: Task["reminder"]): string => {
 
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,
+  siblingTasks,
   onComplete,
   onUncomplete,
   onDelete,
@@ -186,6 +188,32 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             )}>
               {reminderText}
             </span>
+          )}
+          {task.captureGroupId && siblingTasks && siblingTasks.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1 text-[11px] text-muted-foreground mt-1.5 hover:text-foreground transition-colors">
+                  <Layers size={12} />
+                  <span>{siblingTasks.length + 1} from same capture</span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-2" align="start" side="top">
+                <p className="text-xs font-medium text-muted-foreground mb-2">From the same recording</p>
+                <div className="space-y-1.5">
+                  {[task, ...siblingTasks].map(t => (
+                    <div
+                      key={t.id}
+                      className={cn(
+                        "text-xs p-1.5 rounded",
+                        t.id === task.id ? "bg-primary/10 text-foreground font-medium" : "text-muted-foreground"
+                      )}
+                    >
+                      {t.summary}
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </div>
