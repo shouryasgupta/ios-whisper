@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 
 interface InlineVoiceCaptureProps {
   onCapture: (text: string, hasAudio?: boolean) => void;
-  onCaptureMultiple?: (texts: string[], hasAudio?: boolean) => void;
 }
 
 type CaptureState = "idle" | "recording" | "paused" | "typing";
@@ -37,7 +36,6 @@ const WaveformBar: React.FC<{ delay: number; paused: boolean }> = ({ delay, paus
 
 export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   onCapture,
-  onCaptureMultiple,
 }) => {
   const { setIsRecording } = useApp();
   const [state, setState] = useState<CaptureState>("idle");
@@ -99,21 +97,10 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
 
     const randomText =
       sampleTranscriptions[Math.floor(Math.random() * sampleTranscriptions.length)];
+    onCapture(randomText, true);
 
-    // Simulate multi-task: ~40% chance of producing 2-3 tasks from one capture
-    const isMulti = Math.random() < 0.4 && onCaptureMultiple;
-    if (isMulti) {
-      // Pick 2-3 random unique transcriptions
-      const count = Math.random() < 0.5 ? 2 : 3;
-      const shuffled = [...sampleTranscriptions].sort(() => Math.random() - 0.5);
-      const texts = shuffled.slice(0, count);
-      onCaptureMultiple(texts, true);
-      toast("Saved", { description: `${count} tasks captured from recording.`, duration: 2500 });
-    } else {
-      onCapture(randomText, true);
-      toast("Saved", { description: "You don't need to remember this.", duration: 2500 });
-    }
-  }, [onCapture, onCaptureMultiple]);
+    toast("Saved", { description: "You don't need to remember this.", duration: 2500 });
+  }, [onCapture]);
 
   const handleCancel = () => {
     setState("idle");
