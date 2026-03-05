@@ -15,7 +15,7 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpenSignIn }) => {
-  const { tasks, user, isRecording, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
+  const { tasks, user, isRecording, addTask, addTasks, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording, getTasksByGroup } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -59,6 +59,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
 
   const hasNoActiveTasks = overdueTasks.length === 0 && todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
 
+  const getSiblings = useCallback((task: typeof todayTasks[0]) => {
+    if (!task.captureGroupId) return undefined;
+    return getTasksByGroup(task.captureGroupId).filter(t => t.id !== task.id);
+  }, [getTasksByGroup]);
+
   const renderSection = (title: string, sectionTasks: typeof todayTasks, isOverdue = false) => (
     <section>
       <h2 className={cn(
@@ -72,6 +77,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
           <TaskCard
             key={task.id}
             task={task}
+            siblingTasks={getSiblings(task)}
             onComplete={handleComplete}
             onDelete={deleteTask}
             onUpdateReminder={updateTaskReminder}
@@ -109,7 +115,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
             </div>
           )}
         </div>
-        <InlineVoiceCapture onCapture={addTask} />
+        <InlineVoiceCapture onCapture={addTask} onCaptureMultiple={addTasks} />
       </header>
 
       <main className="px-5">
@@ -159,6 +165,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
                   <TaskCard
                     key={task.id}
                     task={task}
+                    siblingTasks={getSiblings(task)}
                     onComplete={handleComplete}
                     onUncomplete={uncompleteTask}
                     onDelete={deleteTask}

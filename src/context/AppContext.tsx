@@ -13,6 +13,7 @@ const defaultDismissState = (): NudgeDismissState => ({ dismissCount: 0, lastDis
 
 interface AppContextType extends AppState {
   addTask: (text: string, hasAudio?: boolean) => void;
+  addTasks: (texts: string[], hasAudio?: boolean) => void;
   completeTask: (id: string) => void;
   uncompleteTask: (id: string) => void;
   deleteTask: (id: string) => void;
@@ -26,6 +27,7 @@ interface AppContextType extends AppState {
   // Nudge engine
   primaryNudge: NudgeType | null;
   activationState: ActivationState;
+  getTasksByGroup: (groupId: string) => Task[];
   dismissNudge: (type: NudgeType) => void;
   enableWatchCapture: () => void;
   // Recording guard
@@ -136,6 +138,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setCaptureCount(prev => prev + 1);
   }, []);
 
+  const addTasks = useCallback((texts: string[], hasAudio: boolean = true) => {
+    const groupId = crypto.randomUUID();
+    const newTasks = texts.map(text => generateMockTask(text, hasAudio, groupId));
+    setTasks(prev => [...newTasks, ...prev]);
+    setCaptureCount(prev => prev + 1);
+  }, []);
+
+  const getTasksByGroup = useCallback((groupId: string): Task[] => {
+    return tasks.filter(t => t.captureGroupId === groupId);
+  }, [tasks]);
+
   const completeTask = useCallback((id: string) => {
     setTasks(prev => prev.map(task =>
       task.id === id ? { ...task, isCompleted: true, completedAt: new Date() } : task
@@ -227,9 +240,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         tasks,
         user,
         captureCount,
-        showSignInPrompt: false, // no longer auto-triggered; nudge engine handles it
+        showSignInPrompt: false,
         primaryNudge,
         activationState,
+        getTasksByGroup,
         dismissNudge,
         enableWatchCapture,
         isRecording,
@@ -238,6 +252,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         showPostSignInBridge,
         dismissPostSignInBridge,
         addTask,
+        addTasks,
         completeTask,
         uncompleteTask,
         deleteTask,
