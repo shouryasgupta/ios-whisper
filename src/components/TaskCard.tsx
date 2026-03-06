@@ -24,7 +24,6 @@ interface TaskCardProps {
 
 const formatReminder = (reminder: Task["reminder"]): string => {
   if (reminder.type === "anytime") return "Anytime";
-  if (reminder.type === "none") return "";
   const date = reminder.date;
   if (isToday(date)) return `Today, ${format(date, "h:mm a")}`;
   if (isTomorrow(date)) return `Tomorrow, ${format(date, "h:mm a")}`;
