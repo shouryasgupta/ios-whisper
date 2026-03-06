@@ -26,6 +26,8 @@ interface AppContextType extends AppState {
   addCapture: (durationSeconds: number, simulateOffline?: boolean) => void;
   deleteCapture: (captureId: string) => void;
   retryCapture: (captureId: string) => void;
+  failCapture: (captureId: string) => void;
+  goOnline: (captureId: string) => void;
   // Nudge engine
   primaryNudge: NudgeType | null;
   activationState: ActivationState;
@@ -172,6 +174,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     simulateProcessing(captureId);
   }, [simulateProcessing]);
 
+  const failCapture = useCallback((captureId: string) => {
+    setCaptures(prev => prev.map(c =>
+      c.id === captureId ? { ...c, status: "failed" as CaptureStatus } : c
+    ));
+  }, []);
+
+  const goOnline = useCallback((captureId: string) => {
+    simulateProcessing(captureId);
+  }, [simulateProcessing]);
+
   const addTask = useCallback((text: string, hasAudio: boolean = true) => {
     const newTask = generateMockTask(text, hasAudio);
     setTasks(prev => [newTask, ...prev]);
@@ -307,6 +319,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addCapture,
         deleteCapture,
         retryCapture,
+        failCapture,
+        goOnline,
         completeTask,
         uncompleteTask,
         deleteTask,
