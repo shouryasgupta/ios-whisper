@@ -21,6 +21,15 @@ export type ReminderTime =
   | { type: "anytime" }
   | { type: "none" };
 
+export type CaptureStatus = "waiting" | "processing" | "failed" | "zero_tasks" | "done";
+
+export interface Capture {
+  id: string;
+  capturedAt: Date;
+  durationSeconds: number;
+  status: CaptureStatus;
+}
+
 export interface Task {
   id: string;
   summary: string;
@@ -28,6 +37,7 @@ export interface Task {
   kind: TaskKind;
   reminder: ReminderTime;
   hasAudio: boolean;
+  captureId?: string;
   hasChecklist: boolean;
   checklistItems?: string[];
   isBuyIntent: boolean;
@@ -50,6 +60,7 @@ export interface User {
 
 export interface AppState {
   tasks: Task[];
+  captures: Capture[];
   user: User | null;
   captureCount: number;
   showSignInPrompt: boolean;
@@ -69,7 +80,7 @@ export const sampleTranscriptions = [
   "Remind me to pay the electricity bill by the 15th",
 ];
 
-export const generateMockTask = (text: string, hasAudio: boolean = true): Task => {
+export const generateMockTask = (text: string, hasAudio: boolean = true, captureId?: string): Task => {
   const isBuyIntent = text.toLowerCase().includes("buy") || text.toLowerCase().includes("order");
   const hasTime = text.toLowerCase().includes("tomorrow") || 
                   text.toLowerCase().includes("am") || 
@@ -93,6 +104,7 @@ export const generateMockTask = (text: string, hasAudio: boolean = true): Task =
     kind: "action",
     reminder,
     hasAudio,
+    captureId,
     hasChecklist: text.includes(" - ") || text.includes(","),
     checklistItems: text.includes(",") ? text.split(" - ").pop()?.split(",").map(s => s.trim()) : undefined,
     isBuyIntent,

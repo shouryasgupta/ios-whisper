@@ -37,7 +37,7 @@ const WaveformBar: React.FC<{ delay: number; paused: boolean }> = ({ delay, paus
 export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   onCapture,
 }) => {
-  const { setIsRecording } = useApp();
+  const { setIsRecording, addCapture } = useApp();
   const [state, setState] = useState<CaptureState>("idle");
   const [typedText, setTypedText] = useState("");
   const [elapsed, setElapsed] = useState(0);
@@ -91,16 +91,16 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
   };
 
   const handleStop = useCallback(() => {
+    const duration = elapsed;
     setState("idle");
     setElapsed(0);
     setIsRecording(false);
 
-    const randomText =
-      sampleTranscriptions[Math.floor(Math.random() * sampleTranscriptions.length)];
-    onCapture(randomText, true);
+    // Create a capture that goes through the processing pipeline
+    addCapture(duration);
 
     toast("Saved", { description: "You don't need to remember this.", duration: 2500 });
-  }, [onCapture]);
+  }, [elapsed, addCapture]);
 
   const handleCancel = () => {
     setState("idle");

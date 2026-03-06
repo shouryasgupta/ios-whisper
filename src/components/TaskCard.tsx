@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Play, Pause, CalendarIcon, Trash2, Circle, Volume2, CheckCircle2, Clock } from "lucide-react";
+import { Play, Pause, CalendarIcon, Trash2, Circle, CheckCircle2, Clock } from "lucide-react";
 import { Task } from "@/types/task";
 import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, addDays } from "date-fns";
@@ -11,12 +11,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { useApp } from "@/context/AppContext";
 
 interface TaskCardProps {
   task: Task;
@@ -24,20 +20,14 @@ interface TaskCardProps {
   onUncomplete?: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateReminder: (id: string, date: Date) => void;
-  onDeleteRecording: (id: string) => void;
 }
 
 const formatReminder = (reminder: Task["reminder"]): string => {
   if (reminder.type === "anytime") return "Anytime";
   if (reminder.type === "none") return "";
-
   const date = reminder.date;
-  if (isToday(date)) {
-    return `Today, ${format(date, "h:mm a")}`;
-  }
-  if (isTomorrow(date)) {
-    return `Tomorrow, ${format(date, "h:mm a")}`;
-  }
+  if (isToday(date)) return `Today, ${format(date, "h:mm a")}`;
+  if (isTomorrow(date)) return `Tomorrow, ${format(date, "h:mm a")}`;
   return format(date, "EEE, MMM d");
 };
 
@@ -47,15 +37,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onUncomplete,
   onDelete,
   onUpdateReminder,
-  onDeleteRecording,
 }) => {
+  const { hasSeenPlaybackHint, markPlaybackHintSeen, getTasksForCapture } = useApp();
+  const { toast } = useToast();
   const reminderText = formatReminder(task.reminder);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playProgress, setPlayProgress] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false);
 
-  // Time picker state — initialized from existing reminder date
+  // Time picker state
   const existingDate = task.reminder.type === "specific" ? task.reminder.date : null;
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(existingDate ?? undefined);
   const [timeHour, setTimeHour] = useState(() => {
@@ -78,7 +69,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     setTimeout(() => onComplete(task.id), 600);
   }, [task.id, task.isCompleted, justCompleted, onComplete]);
 
-  // Simulated 5-second audio playback
+  // Simulated playback
   useEffect(() => {
     if (!isPlaying) return;
     const interval = setInterval(() => {
@@ -101,8 +92,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     } else {
       setIsPlaying(true);
       setPlayProgress(0);
+
+      // Show shared playback hint toast (one-time) if multiple tasks share this capture
+      if (!hasSeenPlaybackHint && task.captureId) {
+        const siblings = getTasksForCapture(task.captureId);
+        if (siblings.length > 1) {
+          markPlaybackHintSeen();
+          toast({
+            description: "Playing the original recording this task came from.",
+            duration: 5000,
+          });
+        }
+      }
     }
-  }, [isPlaying]);
+  }, [isPlaying, hasSeenPlaybackHint, task.captureId, getTasksForCapture, markPlaybackHintSeen, toast]);
 
   const buildDateWithTime = useCallback((date: Date) => {
     let h = parseInt(timeHour, 10) % 12;
@@ -113,12 +116,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     return d;
   }, [timeHour, timeMinute, timePeriod]);
 
-  const handleDateSelect = useCallback(
-    (date: Date | undefined) => {
-      setSelectedDate(date);
-    },
-    []
-  );
+  const handleDateSelect = useCallback((date: Date | undefined) => {
+    setSelectedDate(date);
+  }, []);
 
   const handleConfirmReminder = useCallback(() => {
     const base = selectedDate ?? new Date();
@@ -126,14 +126,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     setCalendarOpen(false);
   }, [selectedDate, task.id, onUpdateReminder, buildDateWithTime]);
 
-  const handleQuickReminder = useCallback(
-    (option: "tomorrow" | "next-week") => {
-      const now = new Date();
-      const d = option === "tomorrow" ? addDays(now, 1) : addDays(now, 7);
-      setSelectedDate(d);
-    },
-    []
-  );
+  const handleQuickReminder = useCallback((option: "tomorrow" | "next-week") => {
+    const now = new Date();
+    const d = option === "tomorrow" ? addDays(now, 1) : addDays(now, 7);
+    setSelectedDate(d);
+  }, []);
 
   const isStriking = justCompleted || task.isCompleted;
 
@@ -293,30 +290,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </PopoverContent>
             </Popover>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  aria-label="Delete options"
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="top">
-                {task.hasAudio && (
-                  <DropdownMenuItem onClick={() => onDeleteRecording(task.id)} className="text-sm">
-                    <Volume2 size={14} className="mr-2" />
-                    Delete Recording
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={() => onDelete(task.id)} className="text-sm text-destructive focus:text-destructive">
-                  <Trash2 size={14} className="mr-2" />
-                  Delete Task
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              onClick={() => onDelete(task.id)}
+              aria-label="Delete task"
+            >
+              <Trash2 size={16} />
+            </Button>
           </div>
         </div>
       ) : task.isCompleted && onUncomplete ? (
