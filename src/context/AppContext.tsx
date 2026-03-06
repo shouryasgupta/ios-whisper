@@ -181,7 +181,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const goOnline = useCallback((captureId: string) => {
-    simulateProcessing(captureId);
+    // Process the specified capture and also retry all failed/waiting ones
+    setCaptures(prev => {
+      const toRetry = prev.filter(c =>
+        (c.id === captureId || c.status === "failed" || c.status === "waiting") && c.status !== "processing" && c.status !== "done"
+      );
+      toRetry.forEach(c => simulateProcessing(c.id));
+      return prev;
+    });
   }, [simulateProcessing]);
 
   const addTask = useCallback((text: string, hasAudio: boolean = true) => {
