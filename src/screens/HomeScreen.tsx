@@ -6,9 +6,10 @@ import { CaptureProcessingCard } from "@/components/CaptureProcessingCard";
 import { EmptyState } from "@/components/EmptyState";
 import { NudgeCard } from "@/components/NudgeCard";
 import { isToday, isFuture, isPast, addDays, isBefore } from "date-fns";
-import { Cloud, Watch, ChevronDown } from "lucide-react";
+import { Cloud, Watch, ChevronDown, Bug } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface HomeScreenProps {
   onOpenWatchSetup?: () => void;
@@ -20,9 +21,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
     tasks, captures, user, isRecording,
     addTask, completeTask, uncompleteTask, deleteTask,
     updateTaskReminder, deleteCapture, retryCapture,
+    addCapture, failCapture, goOnline,
   } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   const handleComplete = useCallback((id: string) => {
     const task = tasks.find(t => t.id === id);
@@ -123,20 +126,84 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
               </div>
             )}
           </div>
-          {user && (
-            <div className="flex items-center gap-3">
-              {user.watchCaptureEnabled && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-                  <Watch size={12} />
-                  <span>Watch</span>
-                </div>
+          <div className="flex items-center gap-2">
+            {user && user.watchCaptureEnabled && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
+                <Watch size={12} />
+                <span>Watch</span>
+              </div>
+            )}
+            <button
+              onClick={() => setShowDebug(prev => !prev)}
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                showDebug ? "bg-destructive/10 text-destructive" : "bg-secondary text-muted-foreground"
               )}
+              aria-label="Debug panel"
+            >
+              <Bug size={14} />
+            </button>
+            {user && (
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-sm font-medium text-primary">{user.name.charAt(0)}</span>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Debug panel */}
+        {showDebug && (
+          <div className="px-5 py-3 border-b border-border bg-secondary/30">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Debug Tools</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => {
+                  addCapture(Math.floor(10 + Math.random() * 50), true);
+                  toast({ title: "Offline capture created", description: "Waiting for internet", duration: 2000 });
+                }}
+              >
+                + Offline Capture
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => {
+                  addCapture(Math.floor(10 + Math.random() * 50), false);
+                  toast({ title: "Online capture created", description: "Processing…", duration: 2000 });
+                }}
+              >
+                + Online Capture
+              </Button>
+              {captures.filter(c => c.status === "waiting" || c.status === "processing").map(c => (
+                <Button
+                  key={`fail-${c.id}`}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-7 text-destructive border-destructive/30"
+                  onClick={() => failCapture(c.id)}
+                >
+                  Fail #{c.id.slice(0, 4)}
+                </Button>
+              ))}
+              {captures.filter(c => c.status === "waiting").map(c => (
+                <Button
+                  key={`online-${c.id}`}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-7 text-primary border-primary/30"
+                  onClick={() => goOnline(c.id)}
+                >
+                  Go Online #{c.id.slice(0, 4)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <InlineVoiceCapture onCapture={addTask} />
       </header>
 
