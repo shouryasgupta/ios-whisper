@@ -8,7 +8,7 @@ const NUDGE_CONFIG: Record<NudgeType, { cooldownMs: number; suppressionMs: numbe
   "watch-usage":{ cooldownMs: 3 * 24 * 60 * 60 * 1000, suppressionMs: 14 * 24 * 60 * 60 * 1000, maxDismissals: 1 },
 };
 
-const defaultDismissState = (): NudgeDismissState => ({ dismissCount: 0, lastDismissedAt: null, lastShownAt: null });
+const defaultDismissState = (): NudgeDismissState => ({ dismissCount: 0, lastDismissedAt: null });
 
 interface AppContextType extends AppState {
   addTask: (text: string, hasAudio?: boolean) => void;
@@ -108,7 +108,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       [type]: {
         dismissCount: prev[type].dismissCount + 1,
         lastDismissedAt: Date.now(),
-        lastShownAt: prev[type].lastShownAt,
       },
     }));
   }, []);
@@ -312,7 +311,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         captures,
         user,
         captureCount,
-        showSignInPrompt: false,
+        showSignInPrompt: false, // deprecated, kept for compat
         primaryNudge,
         activationState,
         dismissNudge,
