@@ -311,7 +311,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         captures,
         user,
         captureCount,
-        showSignInPrompt: false, // deprecated, kept for compat
         primaryNudge,
         activationState,
         dismissNudge,
