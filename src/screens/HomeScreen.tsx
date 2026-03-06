@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { useApp } from "@/context/AppContext";
 import { InlineVoiceCapture } from "@/components/InlineVoiceCapture";
 import { TaskCard } from "@/components/TaskCard";
+import { CaptureProcessingCard } from "@/components/CaptureProcessingCard";
 import { EmptyState } from "@/components/EmptyState";
 import { NudgeCard } from "@/components/NudgeCard";
 import { isToday, isFuture, isPast, addDays, isBefore } from "date-fns";
@@ -15,7 +16,11 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpenSignIn }) => {
-  const { tasks, user, isRecording, addTask, completeTask, uncompleteTask, deleteTask, updateTaskReminder, deleteRecording } = useApp();
+  const {
+    tasks, captures, user, isRecording,
+    addTask, completeTask, uncompleteTask, deleteTask,
+    updateTaskReminder, deleteCapture, retryCapture,
+  } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -37,6 +42,30 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
     });
   }, [tasks, completeTask, uncompleteTask, toast]);
 
+  const handleDeleteTask = useCallback((id: string) => {
+    const task = tasks.find(t => t.id === id);
+    deleteTask(id);
+    toast({
+      title: "Task deleted",
+      description: task?.summary,
+      duration: 5000,
+    });
+  }, [tasks, deleteTask, toast]);
+
+  const handleDeleteCapture = useCallback((captureId: string) => {
+    deleteCapture(captureId);
+    toast({
+      title: "Voice capture deleted",
+      duration: 5000,
+    });
+  }, [deleteCapture, toast]);
+
+  // Filter captures that should show as processing rows (not "done")
+  const pendingCaptures = useMemo(() =>
+    captures.filter(c => c.status !== "done"),
+    [captures]
+  );
+
   const { overdueTasks, todayTasks, upcomingTasks, savedTasks, completedTasks } = useMemo(() => {
     const now = new Date();
     const in7Days = addDays(now, 7);
@@ -57,7 +86,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
     };
   }, [tasks]);
 
-  const hasNoActiveTasks = overdueTasks.length === 0 && todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0;
+  const hasNoActiveTasks = overdueTasks.length === 0 && todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0 && pendingCaptures.length === 0;
 
   const renderSection = (title: string, sectionTasks: typeof todayTasks, isOverdue = false) => (
     <section>
@@ -73,9 +102,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
             key={task.id}
             task={task}
             onComplete={handleComplete}
-            onDelete={deleteTask}
+            onDelete={handleDeleteTask}
             onUpdateReminder={updateTaskReminder}
-            onDeleteRecording={deleteRecording}
           />
         ))}
       </div>
@@ -136,6 +164,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
               onOpenWatchSetup={onOpenWatchSetup ?? (() => {})}
             />
             <div className="space-y-6">
+              {/* Processing rows at top of list — no section header */}
+              {pendingCaptures.length > 0 && (
+                <div className="space-y-3">
+                  {pendingCaptures.map(capture => (
+                    <CaptureProcessingCard
+                      key={capture.id}
+                      capture={capture}
+                      onDelete={handleDeleteCapture}
+                      onRetry={retryCapture}
+                    />
+                  ))}
+                </div>
+              )}
+
               {overdueTasks.length > 0 && renderSection("Overdue", overdueTasks, true)}
               {todayTasks.length > 0 && renderSection("Today", todayTasks)}
               {upcomingTasks.length > 0 && renderSection("Upcoming", upcomingTasks)}
@@ -161,9 +203,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
                     task={task}
                     onComplete={handleComplete}
                     onUncomplete={uncompleteTask}
-                    onDelete={deleteTask}
+                    onDelete={handleDeleteTask}
                     onUpdateReminder={updateTaskReminder}
-                    onDeleteRecording={deleteRecording}
                   />
                 ))}
               </div>
