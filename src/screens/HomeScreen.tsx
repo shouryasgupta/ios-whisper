@@ -200,6 +200,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
                   Go Online #{c.id.slice(0, 4)}
                 </Button>
               ))}
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => {
+                  addCapture(Math.floor(5 + Math.random() * 30), false);
+                  toast({ title: "⌚ Watch capture created", description: "Simulated watch recording", duration: 2000 });
+                }}
+              >
+                + Watch Capture
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => {
+                  addCapture(Math.floor(5 + Math.random() * 30), true);
+                  toast({ title: "⌚ Watch capture (offline)", description: "Waiting for internet", duration: 2000 });
+                }}
+              >
+                + Watch Offline
+              </Button>
             </div>
           </div>
         )}
