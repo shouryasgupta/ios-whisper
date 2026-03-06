@@ -16,7 +16,6 @@ const statusSubtitle: Record<string, string> = {
   waiting: "Waiting for internet",
   processing: "Processing…",
   failed: "Couldn't process yet",
-  zero_tasks: "No tasks detected",
 };
 
 export const CaptureProcessingCard: React.FC<CaptureProcessingCardProps> = ({

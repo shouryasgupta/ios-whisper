@@ -1,5 +1,5 @@
 import React from "react";
-import { Watch, LogIn, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { NudgeType } from "@/types/task";
@@ -10,41 +10,29 @@ interface NudgeCardProps {
 }
 
 const nudgeContent: Record<NudgeType, {
-  icon: React.ReactNode;
-  label: string;
   title: string;
   description: string;
   cta: string;
-  variant: "sign-in" | "watch";
 }> = {
   "sign-in": {
-    icon: <LogIn size={16} className="text-primary" />,
-    label: "",
     title: "",
     description: "Keep your captures across devices. Capture hands-free from your watch.",
     cta: "Sign in",
-    variant: "sign-in",
   },
   "watch-setup": {
-    icon: <Watch size={16} className="text-primary" />,
-    label: "",
     title: "",
     description: "Set up your watch for faster, hands-free capture.",
     cta: "Set up Apple Watch",
-    variant: "watch",
   },
   "watch-usage": {
-    icon: <Watch size={16} className="text-primary" />,
-    label: "",
     title: "Your watch is ready",
     description: "Next time, just raise your wrist and tap to capture.",
     cta: "Got it",
-    variant: "watch",
   },
 };
 
 export const NudgeCard: React.FC<NudgeCardProps> = ({ onOpenSignIn, onOpenWatchSetup }) => {
-  const { primaryNudge, dismissNudge, captureCount } = useApp();
+  const { primaryNudge, dismissNudge } = useApp();
 
   if (!primaryNudge) return null;
 
