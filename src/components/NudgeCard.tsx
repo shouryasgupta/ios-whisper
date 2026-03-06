@@ -1,5 +1,5 @@
 import React from "react";
-import { X } from "lucide-react";
+import { useApp } from "@/context/AppContext";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { NudgeType } from "@/types/task";
