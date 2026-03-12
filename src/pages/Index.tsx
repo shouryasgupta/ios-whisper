@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { BottomNav, TabType } from "@/components/BottomNav";
-import { SignInPrompt } from "@/components/SignInPrompt";
 import { ReminderNotification } from "@/components/ReminderNotification";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
 import { WatchSetupSheet } from "@/components/WatchSetupSheet";
 import { PostSignInBridge } from "@/components/PostSignInBridge";
+import { AuthFlow } from "@/screens/auth/AuthFlow";
 import { Task } from "@/types/task";
 
 const AppContent: React.FC = () => {
