@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface SettingsScreenProps {
-  onSignIn?: () => void;
+  onSignIn: () => void;
 }
 
 interface SettingsItemProps {

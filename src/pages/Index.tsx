@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { BottomNav, TabType } from "@/components/BottomNav";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { ReminderNotification } from "@/components/ReminderNotification";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
 import { WatchSetupSheet } from "@/components/WatchSetupSheet";
 import { PostSignInBridge } from "@/components/PostSignInBridge";
-import { AuthFlow } from "@/screens/auth/AuthFlow";
 import { Task } from "@/types/task";
 
 const AppContent: React.FC = () => {
@@ -22,8 +22,10 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<TabType>("home");
+  const [showSignInModal, setShowSignInModal] = useState(false);
   const [reminderTask, setReminderTask] = useState<Task | null>(null);
   const [showWatchSetup, setShowWatchSetup] = useState(false);
+  const [signInTrigger, setSignInTrigger] = useState<"nudge" | "organic">("organic");
 
   // Simulate reminder notification
   useEffect(() => {
@@ -56,15 +58,30 @@ const AppContent: React.FC = () => {
     }
   }, [tasks, reminderTask]);
 
-  // Auth flow handler
-  const handleAuthenticated = (provider: "apple" | "google" | "email") => {
-    const mappedProvider = provider === "email" ? "google" : provider;
-    signIn(mappedProvider, "organic");
+  const handleSignIn = (provider: "apple" | "google") => {
+    signIn(provider, signInTrigger);
+    setShowSignInModal(false);
+  };
+
+  // Nudge-triggered sign-in
+  const handleNudgeSignIn = () => {
+    setSignInTrigger("nudge");
+    setShowSignInModal(true);
+  };
+
+  // Organic sign-in (from Settings)
+  const handleOrganicSignIn = () => {
+    setSignInTrigger("organic");
+    setShowSignInModal(true);
   };
 
   // Auth-gated watch setup
   const handleOpenWatchSetup = () => {
-    setShowWatchSetup(true);
+    if (!user) {
+      handleNudgeSignIn();
+    } else {
+      setShowWatchSetup(true);
+    }
   };
 
   // Post-sign-in bridge actions
@@ -92,11 +109,6 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // If no user, show auth flow
-  if (!user) {
-    return <AuthFlow onAuthenticated={handleAuthenticated} />;
-  }
-
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
       {reminderTask && (
@@ -112,20 +124,29 @@ const AppContent: React.FC = () => {
       {activeTab === "home" && (
         <HomeScreen
           onOpenWatchSetup={handleOpenWatchSetup}
+          onOpenSignIn={handleNudgeSignIn}
         />
       )}
       {activeTab === "settings" && (
-        <SettingsScreen />
+        <SettingsScreen onSignIn={handleOrganicSignIn} />
       )}
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
       <WatchSetupSheet open={showWatchSetup} onOpenChange={setShowWatchSetup} />
 
+      {/* Post-sign-in bridge (only for nudge-triggered sign-ins) */}
       <PostSignInBridge
         open={showPostSignInBridge}
         onSetupWatch={handleBridgeSetup}
         onLater={handleBridgeLater}
+      />
+
+      {/* Sign-in modal */}
+      <SignInPrompt
+        isOpen={showSignInModal}
+        onClose={() => setShowSignInModal(false)}
+        onSignIn={handleSignIn}
       />
     </div>
   );
