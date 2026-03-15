@@ -53,8 +53,8 @@ interface AppContextType extends AppState {
   addGroceryItem: (listId: string, name: string, quantity?: number) => void;
   removeGroceryItem: (listId: string, itemId: string) => void;
   updateGroceryItemQuantity: (listId: string, itemId: string, quantity: number | undefined) => void;
+  addBackdatedGroceryItems: () => void;
 }
-
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
