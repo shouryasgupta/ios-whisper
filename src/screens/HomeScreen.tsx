@@ -25,6 +25,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
     addCapture, failCapture, goOnline,
     processTextIntent, getGroceryList, groceryLists,
     toggleGroceryItem, addGroceryItem, removeGroceryItem, updateGroceryItemQuantity,
+    addBackdatedGroceryItems,
   } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
