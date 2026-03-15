@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { X, Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
 import { GroceryList, GroceryItem } from "@/types/task";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, isToday, isYesterday, differenceInDays } from "date-fns";
 import {
   Sheet,
   SheetContent,
