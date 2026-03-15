@@ -7,18 +7,21 @@ export type ActivationState =
   | "anonymous_active"
   | "signed_in_no_watch"
   | "watch_enabled_inactive"
-  | "watch_active";
+  | "watch_active"
+  | "power_user";
 
 export interface NudgeDismissState {
   dismissCount: number;
   lastDismissedAt: number | null;
+  lastShownAt: number | null;
 }
 
 export type ReminderTime = 
   | { type: "specific"; date: Date }
-  | { type: "anytime" };
+  | { type: "anytime" }
+  | { type: "none" };
 
-export type CaptureStatus = "waiting" | "processing" | "failed" | "done";
+export type CaptureStatus = "waiting" | "processing" | "failed" | "zero_tasks" | "done";
 
 export interface Capture {
   id: string;
@@ -35,6 +38,10 @@ export interface Task {
   reminder: ReminderTime;
   hasAudio: boolean;
   captureId?: string;
+  hasChecklist: boolean;
+  checklistItems?: string[];
+  isBuyIntent: boolean;
+  buyLink?: string;
   createdAt: Date;
   completedAt?: Date;
   isCompleted: boolean;
@@ -44,6 +51,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string;
   isSignedIn: boolean;
   watchCaptureEnabled: boolean;
   watchEnabledAt: number | null;
@@ -55,6 +63,7 @@ export interface AppState {
   captures: Capture[];
   user: User | null;
   captureCount: number;
+  showSignInPrompt: boolean;
 }
 
 // Sample transcriptions for simulated voice capture
@@ -72,6 +81,7 @@ export const sampleTranscriptions = [
 ];
 
 export const generateMockTask = (text: string, hasAudio: boolean = true, captureId?: string): Task => {
+  const isBuyIntent = text.toLowerCase().includes("buy") || text.toLowerCase().includes("order");
   const hasTime = text.toLowerCase().includes("tomorrow") || 
                   text.toLowerCase().includes("am") || 
                   text.toLowerCase().includes("pm") ||
@@ -95,6 +105,10 @@ export const generateMockTask = (text: string, hasAudio: boolean = true, capture
     reminder,
     hasAudio,
     captureId,
+    hasChecklist: text.includes(" - ") || text.includes(","),
+    checklistItems: text.includes(",") ? text.split(" - ").pop()?.split(",").map(s => s.trim()) : undefined,
+    isBuyIntent,
+    buyLink: isBuyIntent ? `https://www.amazon.com/s?k=${encodeURIComponent(text.split("buy ")[1] || text)}` : undefined,
     createdAt: now,
     isCompleted: false,
   };

@@ -3,6 +3,7 @@ import { Trash2, Check, Pause, Play, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MicButton } from "@/components/MicButton";
+import { sampleTranscriptions } from "@/types/task";
 import { useApp } from "@/context/AppContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
