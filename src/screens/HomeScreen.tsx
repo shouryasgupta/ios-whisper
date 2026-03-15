@@ -285,6 +285,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
                     onUncomplete={uncompleteTask}
                     onDelete={handleDeleteTask}
                     onUpdateReminder={updateTaskReminder}
+                    onOpenGroceryList={setGrocerySheetListId}
+                    groceryItemCount={getGroceryRemainingCount(task.groceryListId)}
                   />
                 ))}
               </div>
@@ -292,6 +294,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
           </section>
         )}
       </main>
+
+      <GroceryListSheet
+        open={!!grocerySheetListId}
+        onOpenChange={(open) => { if (!open) setGrocerySheetListId(null); }}
+        groceryList={grocerySheetListId ? getGroceryList(grocerySheetListId) ?? null : null}
+        onToggleItem={toggleGroceryItem}
+        onAddItem={addGroceryItem}
+        onRemoveItem={removeGroceryItem}
+        onUpdateQuantity={updateGroceryItemQuantity}
+      />
     </div>
   );
 };
