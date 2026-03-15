@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Play, Pause, CalendarIcon, Trash2, Circle, CheckCircle2, Clock } from "lucide-react";
+import { Play, Pause, CalendarIcon, Trash2, Circle, CheckCircle2, Clock, ShoppingCart } from "lucide-react";
 import { Task } from "@/types/task";
 import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, addDays } from "date-fns";
