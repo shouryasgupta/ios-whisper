@@ -45,7 +45,16 @@ interface AppContextType extends AppState {
   markPlaybackHintSeen: () => void;
   // Helpers
   getTasksForCapture: (captureId: string) => Task[];
+  // Grocery
+  processTextIntent: (text: string, hasAudio?: boolean) => void;
+  getGroceryList: (listId: string) => GroceryList | undefined;
+  getActiveGroceryList: () => GroceryList | undefined;
+  toggleGroceryItem: (listId: string, itemId: string) => void;
+  addGroceryItem: (listId: string, name: string, quantity?: number) => void;
+  removeGroceryItem: (listId: string, itemId: string) => void;
+  updateGroceryItemQuantity: (listId: string, itemId: string, quantity: number | undefined) => void;
 }
+
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
