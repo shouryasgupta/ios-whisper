@@ -5,6 +5,7 @@ import { TaskCard } from "@/components/TaskCard";
 import { CaptureProcessingCard } from "@/components/CaptureProcessingCard";
 import { EmptyState } from "@/components/EmptyState";
 import { NudgeCard } from "@/components/NudgeCard";
+import { GroceryListSheet } from "@/components/GroceryListSheet";
 import { isToday, isFuture, isPast, addDays, isBefore } from "date-fns";
 import { Cloud, Watch, ChevronDown, Bug } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
