@@ -46,11 +46,9 @@ export const GroceryListSheet: React.FC<GroceryListSheetProps> = ({
 
   const formatDateLabel = useCallback((dateStr: string) => {
     const date = new Date(dateStr);
-    if (isToday(date)) return "Today";
-    if (isYesterday(date)) return "Yesterday";
-    const days = differenceInDays(new Date(), date);
-    if (days < 7) return format(date, "EEEE");
-    return format(date, "MMM d");
+    if (isToday(date)) return "Added Today";
+    if (isYesterday(date)) return "Added Yesterday";
+    return `Added ${format(date, "MMM d yyyy")}`;
   }, []);
 
   const handleAddItem = useCallback(() => {

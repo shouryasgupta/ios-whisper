@@ -224,6 +224,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
               >
                 + Grocery Items
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7 text-orange-600 border-orange-300"
+                onClick={() => {
+                  addBackdatedGroceryItems();
+                  toast({ title: "Backdated grocery items added", description: "Items from 3, 7, and 14 days ago", duration: 2000 });
+                }}
+              >
+                + Backdated Grocery
+              </Button>
             </div>
           </div>
         )}
