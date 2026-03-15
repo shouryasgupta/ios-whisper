@@ -53,6 +53,29 @@ export const GroceryListSheet: React.FC<GroceryListSheetProps> = ({
   const completedItems = groceryList.items.filter(i => i.status === "completed");
   const remaining = activeItems.length;
 
+  const groupByDate = (items: GroceryItem[]) => {
+    const groups: Record<string, GroceryItem[]> = {};
+    items.forEach(item => {
+      const key = format(new Date(item.addedAt), "yyyy-MM-dd");
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+    // Sort groups newest first
+    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+  };
+
+  const formatDateLabel = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
+    const days = differenceInDays(new Date(), date);
+    if (days < 7) return format(date, "EEEE"); // e.g. "Monday"
+    return format(date, "MMM d");
+  };
+
+  const activeGroups = useMemo(() => groupByDate(activeItems), [activeItems]);
+  const completedGroups = useMemo(() => groupByDate(completedItems), [completedItems]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
