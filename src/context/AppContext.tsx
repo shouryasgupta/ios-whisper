@@ -61,6 +61,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [captures, setCaptures] = useState<Capture[]>([]);
+  const [groceryLists, setGroceryLists] = useState<GroceryList[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [captureCount, setCaptureCount] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
