@@ -95,6 +95,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
 
   const hasNoActiveTasks = overdueTasks.length === 0 && todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0 && pendingCaptures.length === 0;
 
+  const getGroceryRemainingCount = useCallback((listId: string | undefined): number | undefined => {
+    if (!listId) return undefined;
+    const list = getGroceryList(listId);
+    if (!list) return undefined;
+    return list.items.filter(i => i.status === "active").length;
+  }, [getGroceryList]);
+
   const renderSection = (title: string, sectionTasks: typeof todayTasks, isOverdue = false) => (
     <section>
       <h2 className={cn(
@@ -111,6 +118,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
             onComplete={handleComplete}
             onDelete={handleDeleteTask}
             onUpdateReminder={updateTaskReminder}
+            onOpenGroceryList={setGrocerySheetListId}
+            groceryItemCount={getGroceryRemainingCount(task.groceryListId)}
           />
         ))}
       </div>
