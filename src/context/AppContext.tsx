@@ -451,6 +451,64 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   }, []);
 
+  const addBackdatedGroceryItems = useCallback(() => {
+    const now = new Date();
+    const daysAgo = (d: number) => new Date(now.getTime() - d * 24 * 60 * 60 * 1000);
+
+    const backdatedItems: { name: string; quantity?: number; daysBack: number }[] = [
+      { name: "Yogurt", quantity: 2, daysBack: 0 },
+      { name: "Bread", daysBack: 1 },
+      { name: "Cheese", quantity: 1, daysBack: 3 },
+      { name: "Pasta", quantity: 2, daysBack: 7 },
+      { name: "Olive oil", daysBack: 14 },
+    ];
+
+    const activeList = getActiveGroceryList();
+    if (activeList) {
+      const newItems: GroceryItem[] = backdatedItems.map(item => ({
+        id: crypto.randomUUID(),
+        name: item.name,
+        quantity: item.quantity,
+        status: "active" as const,
+        addedAt: daysAgo(item.daysBack),
+        updatedAt: daysAgo(item.daysBack),
+      }));
+      setGroceryLists(prev => prev.map(gl =>
+        gl.listId === activeList.listId
+          ? { ...gl, items: [...gl.items, ...newItems], lastModifiedAt: now }
+          : gl
+      ));
+    } else {
+      const listId = crypto.randomUUID();
+      const taskId = crypto.randomUUID();
+      const groceryItems: GroceryItem[] = backdatedItems.map(item => ({
+        id: crypto.randomUUID(),
+        name: item.name,
+        quantity: item.quantity,
+        status: "active" as const,
+        addedAt: daysAgo(item.daysBack),
+        updatedAt: daysAgo(item.daysBack),
+      }));
+      const newList: GroceryList = { listId, taskId, createdAt: now, lastModifiedAt: now, items: groceryItems };
+      const newTask: Task = {
+        id: taskId,
+        summary: "Buy groceries",
+        fullText: "Buy groceries (debug backdated)",
+        kind: "grocery",
+        reminder: { type: "anytime" },
+        hasAudio: false,
+        hasChecklist: false,
+        isBuyIntent: true,
+        createdAt: now,
+        isCompleted: false,
+        groceryListId: listId,
+      };
+      setGroceryLists(prev => [newList, ...prev]);
+      setTasks(prev => [newTask, ...prev]);
+      setCaptureCount(prev => prev + 1);
+    }
+  }, [getActiveGroceryList]);
+
   const markPlaybackHintSeen = useCallback(() => {
     setHasSeenPlaybackHint(true);
   }, []);
