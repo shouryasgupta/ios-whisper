@@ -164,30 +164,48 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         </button>
 
         <div className="flex-1 min-w-0 relative">
-          <p
+          <div
             className={cn(
-              "font-medium text-card-foreground leading-snug transition-all duration-500",
-              isStriking && "text-muted-foreground"
+              "cursor-default",
+              task.kind === "grocery" && onOpenGroceryList && "cursor-pointer"
             )}
+            onClick={() => {
+              if (task.kind === "grocery" && task.groceryListId && onOpenGroceryList) {
+                onOpenGroceryList(task.groceryListId);
+              }
+            }}
           >
-            <span className="relative inline">
-              {task.summary}
-              <span
-                className={cn(
-                  "absolute left-0 top-1/2 h-[1.5px] bg-muted-foreground/60 transition-all duration-500 ease-out",
-                  isStriking ? "w-full" : "w-0"
-                )}
-              />
-            </span>
-          </p>
-          {reminderText && (
-            <span className={cn(
-              "text-xs text-muted-foreground mt-1 block transition-opacity duration-500",
-              isStriking && "opacity-50"
-            )}>
-              {reminderText}
-            </span>
-          )}
+            <p
+              className={cn(
+                "font-medium text-card-foreground leading-snug transition-all duration-500",
+                isStriking && "text-muted-foreground"
+              )}
+            >
+              <span className="relative inline">
+                {task.summary}
+                <span
+                  className={cn(
+                    "absolute left-0 top-1/2 h-[1.5px] bg-muted-foreground/60 transition-all duration-500 ease-out",
+                    isStriking ? "w-full" : "w-0"
+                  )}
+                />
+              </span>
+            </p>
+            {task.kind === "grocery" && groceryItemCount !== undefined && (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                <ShoppingCart size={12} />
+                {groceryItemCount} item{groceryItemCount !== 1 ? "s" : ""} remaining
+              </span>
+            )}
+            {reminderText && task.kind !== "grocery" && (
+              <span className={cn(
+                "text-xs text-muted-foreground mt-1 block transition-opacity duration-500",
+                isStriking && "opacity-50"
+              )}>
+                {reminderText}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
