@@ -502,6 +502,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       value={{
         tasks,
         captures,
+        groceryLists,
         user,
         captureCount,
         showSignInPrompt: false,
@@ -533,6 +534,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         hasSeenPlaybackHint,
         markPlaybackHintSeen,
         getTasksForCapture,
+        processTextIntent,
+        getGroceryList,
+        getActiveGroceryList,
+        toggleGroceryItem,
+        addGroceryItem,
+        removeGroceryItem,
+        updateGroceryItemQuantity,
       }}
     >
       {children}
