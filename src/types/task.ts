@@ -30,6 +30,23 @@ export interface Capture {
   status: CaptureStatus;
 }
 
+export interface GroceryItem {
+  id: string;
+  name: string;
+  quantity?: number;
+  status: "active" | "completed";
+  addedAt: Date;
+  updatedAt: Date;
+}
+
+export interface GroceryList {
+  listId: string;
+  taskId: string;
+  createdAt: Date;
+  lastModifiedAt: Date;
+  items: GroceryItem[];
+}
+
 export interface Task {
   id: string;
   summary: string;
@@ -45,7 +62,9 @@ export interface Task {
   createdAt: Date;
   completedAt?: Date;
   isCompleted: boolean;
+  groceryListId?: string;
 }
+
 
 export interface User {
   id: string;
