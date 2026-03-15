@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from "react";
-import { Task, User, AppState, NudgeType, ActivationState, NudgeDismissState, Capture, CaptureStatus, generateMockTask, sampleTranscriptions } from "@/types/task";
+import { Task, User, AppState, NudgeType, ActivationState, NudgeDismissState, Capture, CaptureStatus, GroceryList, GroceryItem, GroceryIntentResult, generateMockTask, sampleTranscriptions, detectGroceryIntent } from "@/types/task";
 
 // Cooldown/suppression config (ms)
 const NUDGE_CONFIG: Record<NudgeType, { cooldownMs: number; suppressionMs: number; maxDismissals: number }> = {
