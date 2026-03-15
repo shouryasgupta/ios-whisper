@@ -490,6 +490,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteAccount = useCallback(() => {
     setTasks([]);
     setCaptures([]);
+    setGroceryLists([]);
     setUser(null);
     setCaptureCount(0);
     setSignInSource(null);
