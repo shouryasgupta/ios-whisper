@@ -20,6 +20,8 @@ interface TaskCardProps {
   onUncomplete?: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateReminder: (id: string, date: Date) => void;
+  onOpenGroceryList?: (listId: string) => void;
+  groceryItemCount?: number;
 }
 
 const formatReminder = (reminder: Task["reminder"]): string => {
