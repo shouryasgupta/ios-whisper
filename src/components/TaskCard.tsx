@@ -39,6 +39,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onUncomplete,
   onDelete,
   onUpdateReminder,
+  onOpenGroceryList,
+  groceryItemCount,
 }) => {
   const { hasSeenPlaybackHint, markPlaybackHintSeen, getTasksForCapture } = useApp();
   const { toast } = useToast();
