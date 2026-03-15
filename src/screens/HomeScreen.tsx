@@ -23,10 +23,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
     addTask, completeTask, uncompleteTask, deleteTask,
     updateTaskReminder, deleteCapture, retryCapture,
     addCapture, failCapture, goOnline,
+    processTextIntent, getGroceryList, groceryLists,
+    toggleGroceryItem, addGroceryItem, removeGroceryItem, updateGroceryItemQuantity,
   } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [grocerySheetListId, setGrocerySheetListId] = useState<string | null>(null);
 
   const handleComplete = useCallback((id: string) => {
     const task = tasks.find(t => t.id === id);
