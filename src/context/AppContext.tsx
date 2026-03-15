@@ -270,6 +270,187 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return tasks.filter(t => t.captureId === captureId);
   }, [tasks]);
 
+  // ─── Grocery Logic ───
+
+  const STALENESS_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
+
+  const getActiveGroceryList = useCallback((): GroceryList | undefined => {
+    // Find grocery list attached to an incomplete grocery task
+    const groceryTasks = tasks.filter(t => t.kind === "grocery" && !t.isCompleted && t.groceryListId);
+    if (groceryTasks.length === 0) return undefined;
+    const taskListId = groceryTasks[0].groceryListId;
+    return groceryLists.find(gl => gl.listId === taskListId);
+  }, [tasks, groceryLists]);
+
+  const getGroceryList = useCallback((listId: string): GroceryList | undefined => {
+    return groceryLists.find(gl => gl.listId === listId);
+  }, [groceryLists]);
+
+  const createGroceryListAndTask = useCallback((items: { name: string; quantity?: number }[], hasAudio: boolean = false): void => {
+    const listId = crypto.randomUUID();
+    const taskId = crypto.randomUUID();
+    const now = new Date();
+
+    const groceryItems: GroceryItem[] = items.map(item => ({
+      id: crypto.randomUUID(),
+      name: item.name,
+      quantity: item.quantity,
+      status: "active" as const,
+      addedAt: now,
+      updatedAt: now,
+    }));
+
+    const newList: GroceryList = {
+      listId,
+      taskId,
+      createdAt: now,
+      lastModifiedAt: now,
+      items: groceryItems,
+    };
+
+    const newTask: Task = {
+      id: taskId,
+      summary: "Buy groceries",
+      fullText: `Buy groceries: ${items.map(i => i.name).join(", ")}`,
+      kind: "grocery",
+      reminder: { type: "anytime" },
+      hasAudio,
+      hasChecklist: false,
+      isBuyIntent: true,
+      createdAt: now,
+      isCompleted: false,
+      groceryListId: listId,
+    };
+
+    setGroceryLists(prev => [newList, ...prev]);
+    setTasks(prev => [newTask, ...prev]);
+    setCaptureCount(prev => prev + 1);
+  }, []);
+
+  const addItemsToGroceryList = useCallback((listId: string, items: { name: string; quantity?: number }[]): void => {
+    const now = new Date();
+    setGroceryLists(prev => prev.map(gl => {
+      if (gl.listId !== listId) return gl;
+      const newItems: GroceryItem[] = items.map(item => {
+        // Check if item already exists (case-insensitive)
+        const existing = gl.items.find(i => i.name.toLowerCase() === item.name.toLowerCase() && i.status === "active");
+        if (existing) return null as any; // skip dupes
+        return {
+          id: crypto.randomUUID(),
+          name: item.name,
+          quantity: item.quantity,
+          status: "active" as const,
+          addedAt: now,
+          updatedAt: now,
+        };
+      }).filter(Boolean);
+      return { ...gl, items: [...gl.items, ...newItems], lastModifiedAt: now };
+    }));
+  }, []);
+
+  const processTextIntent = useCallback((text: string, hasAudio: boolean = false) => {
+    const intent = detectGroceryIntent(text);
+
+    if (intent.type === "not_grocery") {
+      // Create a normal task
+      const newTask = generateMockTask(text, hasAudio);
+      setTasks(prev => [newTask, ...prev]);
+      setCaptureCount(prev => prev + 1);
+      return;
+    }
+
+    if (intent.type === "view_grocery") {
+      // Handled by UI — no state change needed
+      return;
+    }
+
+    const activeList = getActiveGroceryList();
+
+    if (intent.type === "remove_grocery") {
+      if (!activeList) return; // no list to remove from
+      const itemName = intent.items[0]?.name?.toLowerCase();
+      setGroceryLists(prev => prev.map(gl => {
+        if (gl.listId !== activeList.listId) return gl;
+        const filtered = gl.items.filter(i => i.name.toLowerCase() !== itemName);
+        return { ...gl, items: filtered, lastModifiedAt: new Date() };
+      }));
+      return;
+    }
+
+    if (intent.type === "update_grocery") {
+      if (!activeList) return;
+      const { name, quantity } = intent.items[0] || {};
+      setGroceryLists(prev => prev.map(gl => {
+        if (gl.listId !== activeList.listId) return gl;
+        const updatedItems = gl.items.map(i =>
+          i.name.toLowerCase() === name?.toLowerCase()
+            ? { ...i, quantity, updatedAt: new Date() }
+            : i
+        );
+        return { ...gl, items: updatedItems, lastModifiedAt: new Date() };
+      }));
+      return;
+    }
+
+    // add_grocery
+    if (activeList) {
+      const isStale = Date.now() - activeList.lastModifiedAt.getTime() > STALENESS_MS;
+      if (intent.isExplicit || !isStale) {
+        addItemsToGroceryList(activeList.listId, intent.items);
+      } else {
+        // Stale — create new
+        createGroceryListAndTask(intent.items, hasAudio);
+      }
+    } else {
+      createGroceryListAndTask(intent.items, hasAudio);
+    }
+  }, [getActiveGroceryList, addItemsToGroceryList, createGroceryListAndTask]);
+
+  const toggleGroceryItem = useCallback((listId: string, itemId: string) => {
+    setGroceryLists(prev => prev.map(gl => {
+      if (gl.listId !== listId) return gl;
+      const items = gl.items.map(i =>
+        i.id === itemId
+          ? { ...i, status: (i.status === "active" ? "completed" : "active") as GroceryItem["status"], updatedAt: new Date() }
+          : i
+      );
+      return { ...gl, items, lastModifiedAt: new Date() };
+    }));
+  }, []);
+
+  const addGroceryItem = useCallback((listId: string, name: string, quantity?: number) => {
+    const now = new Date();
+    setGroceryLists(prev => prev.map(gl => {
+      if (gl.listId !== listId) return gl;
+      const newItem: GroceryItem = {
+        id: crypto.randomUUID(),
+        name,
+        quantity,
+        status: "active",
+        addedAt: now,
+        updatedAt: now,
+      };
+      return { ...gl, items: [...gl.items, newItem], lastModifiedAt: now };
+    }));
+  }, []);
+
+  const removeGroceryItem = useCallback((listId: string, itemId: string) => {
+    setGroceryLists(prev => prev.map(gl => {
+      if (gl.listId !== listId) return gl;
+      return { ...gl, items: gl.items.filter(i => i.id !== itemId), lastModifiedAt: new Date() };
+    }));
+  }, []);
+
+  const updateGroceryItemQuantity = useCallback((listId: string, itemId: string, quantity: number | undefined) => {
+    setGroceryLists(prev => prev.map(gl => {
+      if (gl.listId !== listId) return gl;
+      const items = gl.items.map(i =>
+        i.id === itemId ? { ...i, quantity, updatedAt: new Date() } : i
+      );
+      return { ...gl, items, lastModifiedAt: new Date() };
+    }));
+  }, []);
+
   const markPlaybackHintSeen = useCallback(() => {
     setHasSeenPlaybackHint(true);
   }, []);
