@@ -1,4 +1,4 @@
-export type TaskKind = "action" | "note" | "draft";
+export type TaskKind = "action" | "note" | "draft" | "grocery";
 
 export type NudgeType = "sign-in" | "watch-setup" | "watch-usage";
 
