@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { format, isToday, isYesterday, differenceInDays } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import {
   Sheet,
   SheetContent,
