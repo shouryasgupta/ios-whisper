@@ -213,6 +213,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
                   Go Online #{c.id.slice(0, 4)}
                 </Button>
               ))}
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7 text-accent border-accent/30"
+                onClick={() => {
+                  processTextIntent("Buy bananas, milk and eggs");
+                  toast({ title: "Grocery intent triggered", description: "Buy bananas, milk and eggs", duration: 2000 });
+                }}
+              >
+                + Grocery Items
+              </Button>
             </div>
           </div>
         )}
