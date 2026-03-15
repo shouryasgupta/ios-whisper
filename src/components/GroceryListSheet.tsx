@@ -115,40 +115,56 @@ export const GroceryListSheet: React.FC<GroceryListSheetProps> = ({
           </Button>
         </div>
 
-        {/* Active items */}
-        {activeItems.length > 0 && (
-          <div className="space-y-1 mb-4">
-            {activeItems.map(item => (
-              <GroceryItemRow
-                key={item.id}
-                item={item}
-                listId={groceryList.listId}
-                onToggle={onToggleItem}
-                onRemove={onRemoveItem}
-                onUpdateQuantity={onUpdateQuantity}
-              />
+        {/* Active items grouped by date */}
+        {activeGroups.length > 0 && (
+          <div className="space-y-4 mb-4">
+            {activeGroups.map(([dateKey, items]) => (
+              <div key={dateKey}>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 px-1">
+                  {formatDateLabel(dateKey)}
+                </p>
+                <div className="space-y-1">
+                  {items.map(item => (
+                    <GroceryItemRow
+                      key={item.id}
+                      item={item}
+                      listId={groceryList.listId}
+                      onToggle={onToggleItem}
+                      onRemove={onRemoveItem}
+                      onUpdateQuantity={onUpdateQuantity}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Completed items */}
-        {completedItems.length > 0 && (
+        {/* Completed items grouped by date */}
+        {completedGroups.length > 0 && (
           <div className="mt-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Done ({completedItems.length})
             </p>
-            <div className="space-y-1">
-              {completedItems.map(item => (
-                <GroceryItemRow
-                  key={item.id}
-                  item={item}
-                  listId={groceryList.listId}
-                  onToggle={onToggleItem}
-                  onRemove={onRemoveItem}
-                  onUpdateQuantity={onUpdateQuantity}
-                />
-              ))}
-            </div>
+            {completedGroups.map(([dateKey, items]) => (
+              <div key={dateKey} className="mb-2">
+                <p className="text-[11px] text-muted-foreground/60 px-1 mb-1">
+                  {formatDateLabel(dateKey)}
+                </p>
+                <div className="space-y-1">
+                  {items.map(item => (
+                    <GroceryItemRow
+                      key={item.id}
+                      item={item}
+                      listId={groceryList.listId}
+                      onToggle={onToggleItem}
+                      onRemove={onRemoveItem}
+                      onUpdateQuantity={onUpdateQuantity}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
