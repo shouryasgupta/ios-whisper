@@ -142,6 +142,7 @@ export const InlineVoiceCapture: React.FC<InlineVoiceCaptureProps> = ({
     const handleSaveTyped = () => {
       const text = typedText.trim();
       if (!text) return;
+      // Route through intent detection for typed input
       onCapture(text, false);
       setState("idle");
       setTypedText("");

@@ -5,6 +5,7 @@ import { TaskCard } from "@/components/TaskCard";
 import { CaptureProcessingCard } from "@/components/CaptureProcessingCard";
 import { EmptyState } from "@/components/EmptyState";
 import { NudgeCard } from "@/components/NudgeCard";
+import { GroceryListSheet } from "@/components/GroceryListSheet";
 import { isToday, isFuture, isPast, addDays, isBefore } from "date-fns";
 import { Cloud, Watch, ChevronDown, Bug } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -22,10 +23,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
     addTask, completeTask, uncompleteTask, deleteTask,
     updateTaskReminder, deleteCapture, retryCapture,
     addCapture, failCapture, goOnline,
+    processTextIntent, getGroceryList, groceryLists,
+    toggleGroceryItem, addGroceryItem, removeGroceryItem, updateGroceryItemQuantity,
   } = useApp();
   const { toast } = useToast();
   const [showCompleted, setShowCompleted] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [grocerySheetListId, setGrocerySheetListId] = useState<string | null>(null);
 
   const handleComplete = useCallback((id: string) => {
     const task = tasks.find(t => t.id === id);
@@ -91,6 +95,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
 
   const hasNoActiveTasks = overdueTasks.length === 0 && todayTasks.length === 0 && upcomingTasks.length === 0 && savedTasks.length === 0 && pendingCaptures.length === 0;
 
+  const getGroceryRemainingCount = useCallback((listId: string | undefined): number | undefined => {
+    if (!listId) return undefined;
+    const list = getGroceryList(listId);
+    if (!list) return undefined;
+    return list.items.filter(i => i.status === "active").length;
+  }, [getGroceryList]);
+
   const renderSection = (title: string, sectionTasks: typeof todayTasks, isOverdue = false) => (
     <section>
       <h2 className={cn(
@@ -107,6 +118,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
             onComplete={handleComplete}
             onDelete={handleDeleteTask}
             onUpdateReminder={updateTaskReminder}
+            onOpenGroceryList={setGrocerySheetListId}
+            groceryItemCount={getGroceryRemainingCount(task.groceryListId)}
           />
         ))}
       </div>
@@ -200,11 +213,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
                   Go Online #{c.id.slice(0, 4)}
                 </Button>
               ))}
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7 text-accent border-accent/30"
+                onClick={() => {
+                  processTextIntent("Buy bananas, milk and eggs");
+                  toast({ title: "Grocery intent triggered", description: "Buy bananas, milk and eggs", duration: 2000 });
+                }}
+              >
+                + Grocery Items
+              </Button>
             </div>
           </div>
         )}
 
-        <InlineVoiceCapture onCapture={addTask} />
+        <InlineVoiceCapture onCapture={processTextIntent} />
       </header>
 
       <main className="px-5">
@@ -272,6 +296,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
                     onUncomplete={uncompleteTask}
                     onDelete={handleDeleteTask}
                     onUpdateReminder={updateTaskReminder}
+                    onOpenGroceryList={setGrocerySheetListId}
+                    groceryItemCount={getGroceryRemainingCount(task.groceryListId)}
                   />
                 ))}
               </div>
@@ -279,6 +305,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
           </section>
         )}
       </main>
+
+      <GroceryListSheet
+        open={!!grocerySheetListId}
+        onOpenChange={(open) => { if (!open) setGrocerySheetListId(null); }}
+        groceryList={grocerySheetListId ? getGroceryList(grocerySheetListId) ?? null : null}
+        onToggleItem={toggleGroceryItem}
+        onAddItem={addGroceryItem}
+        onRemoveItem={removeGroceryItem}
+        onUpdateQuantity={updateGroceryItemQuantity}
+      />
     </div>
   );
 };
