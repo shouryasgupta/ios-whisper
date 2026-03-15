@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { X, Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
 import { GroceryList, GroceryItem } from "@/types/task";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, isToday, isYesterday, differenceInDays } from "date-fns";
 import {
   Sheet,
   SheetContent,
@@ -34,10 +34,28 @@ export const GroceryListSheet: React.FC<GroceryListSheetProps> = ({
 }) => {
   const [newItemText, setNewItemText] = useState("");
 
+  const groupByDate = useCallback((items: GroceryItem[]) => {
+    const groups: Record<string, GroceryItem[]> = {};
+    items.forEach(item => {
+      const key = format(new Date(item.addedAt), "yyyy-MM-dd");
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+  }, []);
+
+  const formatDateLabel = useCallback((dateStr: string) => {
+    const date = new Date(dateStr);
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
+    const days = differenceInDays(new Date(), date);
+    if (days < 7) return format(date, "EEEE");
+    return format(date, "MMM d");
+  }, []);
+
   const handleAddItem = useCallback(() => {
     const text = newItemText.trim();
     if (!text || !groceryList) return;
-    // Parse quantity prefix: "3 bananas"
     const qtyMatch = text.match(/^(\d+)\s+(.+)$/);
     if (qtyMatch) {
       onAddItem(groceryList.listId, qtyMatch[2], parseInt(qtyMatch[1]));
@@ -47,11 +65,13 @@ export const GroceryListSheet: React.FC<GroceryListSheetProps> = ({
     setNewItemText("");
   }, [newItemText, groceryList, onAddItem]);
 
-  if (!groceryList) return null;
-
-  const activeItems = groceryList.items.filter(i => i.status === "active");
-  const completedItems = groceryList.items.filter(i => i.status === "completed");
+  const activeItems = groceryList?.items.filter(i => i.status === "active") ?? [];
+  const completedItems = groceryList?.items.filter(i => i.status === "completed") ?? [];
   const remaining = activeItems.length;
+  const activeGroups = useMemo(() => groupByDate(activeItems), [activeItems, groupByDate]);
+  const completedGroups = useMemo(() => groupByDate(completedItems), [completedItems, groupByDate]);
+
+  if (!groceryList) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -95,40 +115,56 @@ export const GroceryListSheet: React.FC<GroceryListSheetProps> = ({
           </Button>
         </div>
 
-        {/* Active items */}
-        {activeItems.length > 0 && (
-          <div className="space-y-1 mb-4">
-            {activeItems.map(item => (
-              <GroceryItemRow
-                key={item.id}
-                item={item}
-                listId={groceryList.listId}
-                onToggle={onToggleItem}
-                onRemove={onRemoveItem}
-                onUpdateQuantity={onUpdateQuantity}
-              />
+        {/* Active items grouped by date */}
+        {activeGroups.length > 0 && (
+          <div className="space-y-4 mb-4">
+            {activeGroups.map(([dateKey, items]) => (
+              <div key={dateKey}>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 px-1">
+                  {formatDateLabel(dateKey)}
+                </p>
+                <div className="space-y-1">
+                  {items.map(item => (
+                    <GroceryItemRow
+                      key={item.id}
+                      item={item}
+                      listId={groceryList.listId}
+                      onToggle={onToggleItem}
+                      onRemove={onRemoveItem}
+                      onUpdateQuantity={onUpdateQuantity}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Completed items */}
-        {completedItems.length > 0 && (
+        {/* Completed items grouped by date */}
+        {completedGroups.length > 0 && (
           <div className="mt-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Done ({completedItems.length})
             </p>
-            <div className="space-y-1">
-              {completedItems.map(item => (
-                <GroceryItemRow
-                  key={item.id}
-                  item={item}
-                  listId={groceryList.listId}
-                  onToggle={onToggleItem}
-                  onRemove={onRemoveItem}
-                  onUpdateQuantity={onUpdateQuantity}
-                />
-              ))}
-            </div>
+            {completedGroups.map(([dateKey, items]) => (
+              <div key={dateKey} className="mb-2">
+                <p className="text-[11px] text-muted-foreground/60 px-1 mb-1">
+                  {formatDateLabel(dateKey)}
+                </p>
+                <div className="space-y-1">
+                  {items.map(item => (
+                    <GroceryItemRow
+                      key={item.id}
+                      item={item}
+                      listId={groceryList.listId}
+                      onToggle={onToggleItem}
+                      onRemove={onRemoveItem}
+                      onUpdateQuantity={onUpdateQuantity}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
