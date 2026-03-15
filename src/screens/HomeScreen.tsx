@@ -217,7 +217,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenWatchSetup, onOpen
           </div>
         )}
 
-        <InlineVoiceCapture onCapture={addTask} />
+        <InlineVoiceCapture onCapture={processTextIntent} />
       </header>
 
       <main className="px-5">
